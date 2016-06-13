@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 
 	"github.com/BurntSushi/toml"
 	log "github.com/Sirupsen/logrus"
@@ -27,7 +28,11 @@ type CliOpts struct {
 }
 
 type ApiError struct {
-	Error string `"json:error"`
+	Error string `json:"error"`
+}
+
+type ApiMessage struct {
+	Message string `json:"message"`
 }
 
 func exitWithError(err error, message string) {
@@ -53,6 +58,33 @@ func parseCommandLine() *CliOpts {
 	return &opts
 }
 
+func run(command string) error {
+	cmd := exec.Command("/bin/bash", "-c", command)
+	err := cmd.Run()
+	if err != nil {
+		log.Errorf("Error running '%s': %s", command, err.Error())
+	}
+
+	return err
+}
+
+func healthHandler(response http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
+	response.Header().Set("Content-Type", "application/json")
+
+	err := run("ps auxww | grep -v haproxy-api | grep [h]aproxy")
+	if err != nil {
+		message, _ := json.Marshal(ApiError{Error: "No HAproxy running!"})
+		response.Write(message)
+		response.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	message, _ := json.Marshal(ApiMessage{Message: "Healthy!"})
+	response.Write(message)
+	return
+}
+
 func updateHandler(response http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	response.Header().Set("Content-Type", "application/json")
@@ -61,6 +93,7 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		message, _ := json.Marshal(ApiError{Error: err.Error()})
 		response.Write(message)
+		response.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -79,7 +112,7 @@ func serveHttp() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/update", updateHandler).Methods("PUT")
-	//router.HandleFunc("/health", makeHandler(healthHandler)).Methods("GET")
+	router.HandleFunc("/health", healthHandler).Methods("GET")
 	http.Handle("/", handlers.LoggingHandler(os.Stdout, router))
 
 	err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", listen_port), nil)
