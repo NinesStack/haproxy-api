@@ -1,4 +1,4 @@
 bind_ip       = "0.0.0.0"
-template_file = "views/haproxy.cfg"
+template_file = "templates/haproxy.cfg"
 config_file   = "/etc/haproxy.cfg"
 pid_file      = "/var/run/haproxy.pid"
