@@ -1,7 +1,7 @@
 HAproxy-API
 ===========
 
-This application is a companion piece to
+This application is a companion to
 [Sidecar](https://github.com/newrelic/sidecar) that allows you to run HAproxy
 and Sidecar in separate Docker containers that can be deployed separately. This
 has the advantage of not taking down HAproxy while redeploying Sidecar. It is
