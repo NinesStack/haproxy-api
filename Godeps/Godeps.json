@@ -1,0 +1,147 @@
+{
+	"ImportPath": "github.com/nitro/haproxy-api",
+	"GoVersion": "go1.5",
+	"GodepVersion": "v67",
+	"Deps": [
+		{
+			"ImportPath": "github.com/BurntSushi/toml",
+			"Comment": "v0.1.0-21-g056c9bc",
+			"Rev": "056c9bc7be7190eaa7715723883caffa5f8fa3e4"
+		},
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.10.0-16-gcd7d1bb",
+			"Rev": "cd7d1bbe41066b6c1f19780f895901052150a575"
+		},
+		{
+			"ImportPath": "github.com/alecthomas/units",
+			"Rev": "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a"
+		},
+		{
+			"ImportPath": "github.com/armon/go-metrics",
+			"Rev": "06b60999766278efd6d2b5d8418a58c3d5b99e87"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/opts",
+			"Comment": "v1.4.1-12113-g16e6211",
+			"Rev": "16e6211cf7ffcdaae11e4ded61d0e15b52c1c8a4"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/archive",
+			"Comment": "v1.4.1-12113-g16e6211",
+			"Rev": "16e6211cf7ffcdaae11e4ded61d0e15b52c1c8a4"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/fileutils",
+			"Comment": "v1.4.1-12113-g16e6211",
+			"Rev": "16e6211cf7ffcdaae11e4ded61d0e15b52c1c8a4"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/homedir",
+			"Comment": "v1.4.1-12113-g16e6211",
+			"Rev": "16e6211cf7ffcdaae11e4ded61d0e15b52c1c8a4"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/idtools",
+			"Comment": "v1.4.1-12113-g16e6211",
+			"Rev": "16e6211cf7ffcdaae11e4ded61d0e15b52c1c8a4"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/ioutils",
+			"Comment": "v1.4.1-12113-g16e6211",
+			"Rev": "16e6211cf7ffcdaae11e4ded61d0e15b52c1c8a4"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/longpath",
+			"Comment": "v1.4.1-12113-g16e6211",
+			"Rev": "16e6211cf7ffcdaae11e4ded61d0e15b52c1c8a4"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/pools",
+			"Comment": "v1.4.1-12113-g16e6211",
+			"Rev": "16e6211cf7ffcdaae11e4ded61d0e15b52c1c8a4"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/promise",
+			"Comment": "v1.4.1-12113-g16e6211",
+			"Rev": "16e6211cf7ffcdaae11e4ded61d0e15b52c1c8a4"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/stdcopy",
+			"Comment": "v1.4.1-12113-g16e6211",
+			"Rev": "16e6211cf7ffcdaae11e4ded61d0e15b52c1c8a4"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/system",
+			"Comment": "v1.4.1-12113-g16e6211",
+			"Rev": "16e6211cf7ffcdaae11e4ded61d0e15b52c1c8a4"
+		},
+		{
+			"ImportPath": "github.com/docker/go-units",
+			"Comment": "v0.3.0",
+			"Rev": "5d2041e26a699eaca682e2ea41c8f891e1060444"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient",
+			"Rev": "3134ad4ea8f8a04974cde3ef3958e265c605b0c1"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "1c83b3eabd45b6d76072b66b746c20815fb2872d"
+		},
+		{
+			"ImportPath": "github.com/gorilla/handlers",
+			"Rev": "b3aff83722cb2ae031a70cae984650e3a16cd20e"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "9c068cf16d982f8bd444b8c352acbeec34c4fe5b"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/go-cleanhttp",
+			"Rev": "ad28ea4487f05916463e2423a55166280e8254b5"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/go-msgpack/codec",
+			"Rev": "fa3f63826f7c23912c15263591e65d54d080b458"
+		},
+		{
+			"ImportPath": "github.com/newrelic-forks/memberlist",
+			"Rev": "7b2150b153e09f91ab7655b4bc54e17d9ab86c6f"
+		},
+		{
+			"ImportPath": "github.com/newrelic/sidecar/catalog",
+			"Rev": "524fa5d557d5356ea4ba16db64537b2a9cf9aaba"
+		},
+		{
+			"ImportPath": "github.com/newrelic/sidecar/output",
+			"Rev": "524fa5d557d5356ea4ba16db64537b2a9cf9aaba"
+		},
+		{
+			"ImportPath": "github.com/newrelic/sidecar/service",
+			"Rev": "524fa5d557d5356ea4ba16db64537b2a9cf9aaba"
+		},
+		{
+			"ImportPath": "github.com/opencontainers/runc/libcontainer/user",
+			"Comment": "v0.1.1-93-gc6a791b",
+			"Rev": "c6a791bef906b0dfdf81e85b840bec475b8ec75e"
+		},
+		{
+			"ImportPath": "github.com/relistan/go-director",
+			"Rev": "95dd09f61051613106a9b3cd9813bda3f5f5f87d"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "ef00b378c73f107bf44d5c9b69875255ce89b79a"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "833a04a10549a95dc34458c195cbad61bbb6cb4d"
+		},
+		{
+			"ImportPath": "gopkg.in/alecthomas/kingpin.v1",
+			"Comment": "v1.3.7",
+			"Rev": "45f9714aa86a9624491adeaab1e9df1baf84dd38"
+		}
+	]
+}
