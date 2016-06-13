@@ -16,7 +16,7 @@ Configuration
 
 The application itself is not configurable except by passing in a command
 line switch to tell it which configuration file to use. That file contains
-settings that only really pertain to HAproxy itself. Most of the items
+settings that **only really pertain to HAproxy** itself. Most of the items
 are self-explanatory.
 
 ```
