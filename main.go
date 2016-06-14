@@ -74,13 +74,13 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 
 	err := run("ps auxww | grep -v haproxy-api | grep [h]aproxy")
 	if err != nil {
-		message, _ := json.Marshal(ApiError{Error: "No HAproxy running!"})
+		message, _ := json.Marshal(ApiError{"No HAproxy running!"})
 		response.Write(message)
 		response.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	message, _ := json.Marshal(ApiMessage{Message: "Healthy!"})
+	message, _ := json.Marshal(ApiMessage{"Healthy!"})
 	response.Write(message)
 	return
 }
@@ -91,7 +91,7 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 
 	bytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		message, _ := json.Marshal(ApiError{Error: err.Error()})
+		message, _ := json.Marshal(ApiError{err.Error()})
 		response.Write(message)
 		response.WriteHeader(http.StatusInternalServerError)
 		return
