@@ -107,6 +107,28 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 	proxy.WriteAndReload(state)
 }
 
+func fetchState(url string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	state, err := catalog.Decode(bytes)
+	if err != nil {
+		return err
+	}
+
+	log.Info("Updating state")
+	proxy.WriteAndReload(state)
+
+	return nil
+}
+
 func serveHttp() {
 	log.Infof("Starting up on 0.0.0.0:%d", listen_port)
 	router := mux.NewRouter()
@@ -124,6 +146,12 @@ func serveHttp() {
 func main() {
 	opts := parseCommandLine()
 	proxy = parseConfig(*opts.ConfigFile) // Cheat and just parse the config right into the struct
+
+	log.Info("Fetching initial state on startup...")
+	err := fetchState(fmt.Sprintf("http://%s:7777/state", proxy.BindIP))
+	if err != nil {
+		log.Error("Failed to fetch state... continuing in hopes someone will post it")
+	}
 
 	serveHttp()
 }
