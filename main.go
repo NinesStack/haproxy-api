@@ -146,6 +146,8 @@ func serveHttp() {
 func main() {
 	opts := parseCommandLine()
 	proxy = parseConfig(*opts.ConfigFile) // Cheat and just parse the config right into the struct
+	proxy.ReloadCmd = "haproxy -f " + proxy.ConfigFile + " -p " + proxy.PidFile + " `[[ -f " + proxy.PidFile + " ]] && echo \"-sf $(cat " + proxy.PidFile + ")\"]]`"
+	proxy.VerifyCmd = "haproxy -c -f " + proxy.ConfigFile
 
 	log.Info("Fetching initial state on startup...")
 	err := fetchState(fmt.Sprintf("http://%s:7777/state", proxy.BindIP))
