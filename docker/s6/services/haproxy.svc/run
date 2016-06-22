@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# stderr -> stdout
+exec 2>&1
+
+cd /
+
+exec haproxy -f /etc/haproxy.cfg
