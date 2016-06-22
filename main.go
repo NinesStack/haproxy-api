@@ -111,7 +111,7 @@ func serveHttp() {
 	log.Infof("Starting up on 0.0.0.0:%d", listen_port)
 	router := mux.NewRouter()
 
-	router.HandleFunc("/update", updateHandler).Methods("PUT")
+	router.HandleFunc("/update", updateHandler).Methods("POST")
 	router.HandleFunc("/health", healthHandler).Methods("GET")
 	http.Handle("/", handlers.LoggingHandler(os.Stdout, router))
 
