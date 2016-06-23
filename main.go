@@ -72,7 +72,7 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	response.Header().Set("Content-Type", "application/json")
 
-	err := run("ps auxww | grep -v haproxy-api | grep [h]aproxy")
+	err := run("test -f " + proxy.PidFile + " && ps aux `cat " + proxy.PidFile + "`")
 	if err != nil {
 		message, _ := json.Marshal(ApiError{"No HAproxy running!"})
 		response.Write(message)
