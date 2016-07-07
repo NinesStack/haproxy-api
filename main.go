@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 	log "github.com/Sirupsen/logrus"
@@ -21,7 +22,11 @@ const (
 	listen_port = 7778
 )
 
-var proxy *haproxy.HAproxy
+var (
+	proxy *haproxy.HAproxy
+	proxyLock *sync.Mutex
+)
+
 
 type CliOpts struct {
 	ConfigFile *string
@@ -102,6 +107,16 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	writeAndReload(state)
+}
+
+func writeAndReload(state *catalog.ServicesState) {
+	// We really, really don't want to be doing this more
+	// than once at a time. Since each request is already on its
+	// own goroutine, let's just use that and synchronize.
+	proxyLock.Lock()
+	defer proxyLock.Unlock()
 
 	log.Info("Updating state")
 	proxy.WriteAndReload(state)
