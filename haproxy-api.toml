@@ -1,12 +1,12 @@
 [haproxy_api]
-bind_ip = "0.0.0.0"   
-bind_port = 7778
+bind_ip = "0.0.0.0"   # The IP to bind to for this service
+bind_port = 7778      # Port we'll bind to for this service
 
 [haproxy]
-bind_ip     = "0.0.0.0"
-template    = "templates/haproxy.cfg"
-config_file = "/etc/haproxy.cfg"
-pid_file    = "/var/run/haproxy.pid"
+bind_ip     = "0.0.0.0"               # Bind IP for HAproxy itself
+template    = "templates/haproxy.cfg" # Template to use for HAproxy
+config_file = "/etc/haproxy.cfg"      # Where to write the config
+pid_file    = "/var/run/haproxy.pid"  # Where to write the HAproxy pid file
 
 [sidecar]
-state_url = "http://localhost:7777/state.json"
+state_url = "http://localhost:7777/state.json" # Where to fetch our initial state

@@ -11,30 +11,23 @@ by Sidecar.
 This application will manage HAproxy by either running it or restarting it
 after templating out a configuration from the provided Sidecar state.
 
-Assumptions
------------
-
-We make some assumptions in the code and configuration for this service:
-
- * You are running it on the same host as Sidecar
- * You are running it in either on the host or in a container in 
-   host networking mode
- * Sidecar can be reached on the same IP address as `bind_ip` in the config
+Generally you will run this on the same host as the Sidecar instance it is
+subscribed to. There might be situations like frontend gateways where it makes
+sense to subscribe it to a remote Sidecar instance. Its sole job is to receive
+state from Sidecar and configure/manage HAproxy.
 
 Configuration
 -------------
 
-The application itself is not configurable except by passing in a command
-line switch to tell it which configuration file to use. That file contains
-settings that **only really pertain to HAproxy** itself. Most of the items
-are self-explanatory.
-
-```
-bind_ip       = "0.0.0.0"
-template_file = "views/haproxy.cfg"
-config_file   = "/etc/haproxy.cfg"
-pid_file      = "/var/run/haproxy.pid"
-```
+There is a sample configuration in [haproxy-api.toml](haproxy-api.toml),
+including comments on what each item means. Generally you need to know the
+remote URL of a Sidecar instance you will connect to. If you run in host
+networking mode this will be `http://localhost:7777/state.json` if you have a
+custom Docker network, then it will be somethign like `http://<name of Sidecar
+container>:7777/state.json`. This URL is used for bootstrapping the container
+because we don't have any stored state. It will then receive updates from
+Sidecar itself (if you've configured it to publish them), and won't make any
+further calls to Sidecar.
 
 Health Checking
 ---------------
