@@ -65,8 +65,8 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 	err := run("test -f " + proxy.PidFile + " && ps aux `cat " + proxy.PidFile + "`")
 	if err != nil {
 		message, _ := json.Marshal(ApiError{"No HAproxy running!"})
-		response.Write(message)
 		response.WriteHeader(http.StatusInternalServerError)
+		response.Write(message)
 		return
 	}
 
