@@ -5,4 +5,4 @@ exec 2>&1
 
 cd /haproxy-api
 
-exec ./haproxy-api -f haproxy.toml
+exec ./haproxy-api -f haproxy-api.toml

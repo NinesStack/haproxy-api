@@ -8,7 +8,7 @@ RUN cd / && curl -L https://github.com/just-containers/skaware/releases/download
 
 # Set up haproxy-api
 ADD haproxy-api /haproxy-api/haproxy-api
-ADD haproxy.toml /haproxy-api/haproxy.toml
+ADD haproxy-api.toml /haproxy-api/haproxy-api.toml
 ADD templates /haproxy-api/templates
 ADD s6 /etc
 
