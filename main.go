@@ -20,7 +20,7 @@ import (
 
 var (
 	proxy     *haproxy.HAproxy
-	proxyLock *sync.Mutex
+	proxyLock sync.Mutex
 )
 
 type CliOpts struct {
@@ -124,7 +124,6 @@ func fetchState(url string) error {
 		return err
 	}
 
-	log.Info("Updating state")
 	writeAndReload(state)
 
 	return nil
