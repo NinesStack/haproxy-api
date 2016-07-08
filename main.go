@@ -8,8 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 
-	"github.com/BurntSushi/toml"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -18,15 +18,10 @@ import (
 	"gopkg.in/alecthomas/kingpin.v1"
 )
 
-const (
-	listen_port = 7778
-)
-
 var (
-	proxy *haproxy.HAproxy
+	proxy     *haproxy.HAproxy
 	proxyLock *sync.Mutex
 )
-
 
 type CliOpts struct {
 	ConfigFile *string
@@ -46,19 +41,9 @@ func exitWithError(err error, message string) {
 	}
 }
 
-func parseConfig(path string) *haproxy.HAproxy{
-	var config haproxy.HAproxy
-	_, err := toml.DecodeFile(path, &config)
-	if err != nil {
-		exitWithError(err, "Failed to parse config file")
-	}
-
-	return &config
-}
-
 func parseCommandLine() *CliOpts {
 	var opts CliOpts
-	opts.ConfigFile = kingpin.Flag("config-file", "The config file to use").Short('f').Default("haproxy.toml").String()
+	opts.ConfigFile = kingpin.Flag("config-file", "The config file to use").Short('f').Default("haproxy-api.toml").String()
 	kingpin.Parse()
 	return &opts
 }
@@ -123,7 +108,8 @@ func writeAndReload(state *catalog.ServicesState) {
 }
 
 func fetchState(url string) error {
-	resp, err := http.Get(url)
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Get(url)
 	if err != nil {
 		return err
 	}
@@ -139,20 +125,22 @@ func fetchState(url string) error {
 	}
 
 	log.Info("Updating state")
-	proxy.WriteAndReload(state)
+	writeAndReload(state)
 
 	return nil
 }
 
-func serveHttp() {
-	log.Infof("Starting up on 0.0.0.0:%d", listen_port)
+func serveHttp(listenIp string, listenPort int) {
+	listenStr := fmt.Sprintf("%s:%d", listenIp, listenPort)
+
+	log.Infof("Starting up on %s", listenStr)
 	router := mux.NewRouter()
 
 	router.HandleFunc("/update", updateHandler).Methods("POST")
 	router.HandleFunc("/health", healthHandler).Methods("GET")
 	http.Handle("/", handlers.LoggingHandler(os.Stdout, router))
 
-	err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", listen_port), nil)
+	err := http.ListenAndServe(listenStr, nil)
 	if err != nil {
 		log.Fatalf("Can't start http server: %s", err.Error())
 	}
@@ -160,15 +148,17 @@ func serveHttp() {
 
 func main() {
 	opts := parseCommandLine()
-	proxy = parseConfig(*opts.ConfigFile) // Cheat and just parse the config right into the struct
-	proxy.ReloadCmd = "haproxy -f " + proxy.ConfigFile + " -p " + proxy.PidFile + " `[[ -f " + proxy.PidFile + " ]] && echo \"-sf $(cat " + proxy.PidFile + ")\"]]`"
-	proxy.VerifyCmd = "haproxy -c -f " + proxy.ConfigFile
+	config := parseConfig(*opts.ConfigFile)
+
+	proxy = config.HAproxy
 
 	log.Info("Fetching initial state on startup...")
-	err := fetchState(fmt.Sprintf("http://%s:7777/state", proxy.BindIP))
+	err := fetchState(config.Sidecar.StateUrl)
 	if err != nil {
-		log.Error("Failed to fetch state... continuing in hopes someone will post it")
+		log.Errorf("Failed to fetch state from '%s'... continuing in hopes someone will post it", config.Sidecar.StateUrl)
+	} else {
+		log.Info("Successfully retrieved state")
 	}
 
-	serveHttp()
+	serveHttp(config.HAproxyApi.BindIP, config.HAproxyApi.BindPort)
 }
