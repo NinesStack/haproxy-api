@@ -3,7 +3,7 @@ bind_ip = "0.0.0.0"
 bind_port = 7778
 
 [haproxy]
-bind_ip     = "0.0.0.0"
+bind_ip     = "192.168.168.168"
 template    = "templates/haproxy.cfg"
 config_file = "/etc/haproxy.cfg"
 pid_file    = "/var/run/haproxy.pid"
