@@ -18,9 +18,18 @@ import (
 	"gopkg.in/alecthomas/kingpin.v1"
 )
 
+const (
+	RELOAD_BUFFER    = 20
+	// A new service usually comes in as three events.
+	// By 5 seconds it's usually alive.
+	RELOAD_HOLD_DOWN = 5 * time.Second
+)
+
 var (
-	proxy     *haproxy.HAproxy
-	proxyLock sync.Mutex
+	proxy        *haproxy.HAproxy
+	stateLock    sync.Mutex
+	reloadChan   chan time.Time
+	currentState *catalog.ServicesState
 )
 
 type CliOpts struct {
@@ -93,18 +102,47 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	writeAndReload(state)
+	updateState(state)
+}
+
+func processUpdates() {
+	for {
+		// Batch up to RELOAD_BUFFER number updates into a
+		// single update.
+		first := <-reloadChan
+		pending := len(reloadChan)
+
+		writeAndReload(currentState)
+
+		// We just flushed the most recent state, dump all the
+		// pending items up to that point.
+		var reload time.Time
+		for i := 0; i < pending; i++ {
+			reload = <-reloadChan
+		}
+
+		if first.Before(reload) {
+			log.Info("Skipped %d messages between %s and %s", pending, first, reload)
+		}
+
+		// Don't notify more frequently than every RELOAD_HOLD_DOWN period. When a
+		// deployment rolls across the cluster it can trigger a bunch of groupable
+		// updates.
+		log.Debug("Holding down...")
+		time.Sleep(RELOAD_HOLD_DOWN)
+	}
 }
 
 func writeAndReload(state *catalog.ServicesState) {
-	// We really, really don't want to be doing this more
-	// than once at a time. Since each request is already on its
-	// own goroutine, let's just use that and synchronize.
-	proxyLock.Lock()
-	defer proxyLock.Unlock()
-
-	log.Info("Updating state")
+	log.Info("Updating HAproxy")
 	proxy.WriteAndReload(state)
+}
+
+func updateState(state *catalog.ServicesState) {
+	stateLock.Lock()
+	defer stateLock.Unlock()
+	currentState = state
+	reloadChan <- time.Now().UTC()
 }
 
 func fetchState(url string) error {
@@ -151,6 +189,8 @@ func main() {
 
 	proxy = config.HAproxy
 
+	reloadChan = make(chan time.Time, RELOAD_BUFFER)
+
 	log.Info("Fetching initial state on startup...")
 	err := fetchState(config.Sidecar.StateUrl)
 	if err != nil {
@@ -159,5 +199,9 @@ func main() {
 		log.Info("Successfully retrieved state")
 	}
 
+	go processUpdates()
+
 	serveHttp(config.HAproxyApi.BindIP, config.HAproxyApi.BindPort)
+
+	close(reloadChan)
 }
