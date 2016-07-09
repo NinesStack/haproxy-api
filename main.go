@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	RELOAD_BUFFER    = 20
+	RELOAD_BUFFER    = 256
 	// A new service usually comes in as three events.
 	// By 5 seconds it's usually alive.
 	RELOAD_HOLD_DOWN = 5 * time.Second
@@ -122,7 +122,7 @@ func processUpdates() {
 		}
 
 		if first.Before(reload) {
-			log.Info("Skipped %d messages between %s and %s", pending, first, reload)
+			log.Infof("Skipped %d messages between %s and %s", pending, first, reload)
 		}
 
 		// Don't notify more frequently than every RELOAD_HOLD_DOWN period. When a
