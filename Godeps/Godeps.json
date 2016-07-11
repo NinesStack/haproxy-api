@@ -98,6 +98,10 @@
 			"Rev": "9c068cf16d982f8bd444b8c352acbeec34c4fe5b"
 		},
 		{
+			"ImportPath": "github.com/hashicorp/errwrap",
+			"Rev": "7554cd9344cec97297fa6649b055a8c98c2a1e55"
+		},
+		{
 			"ImportPath": "github.com/hashicorp/go-cleanhttp",
 			"Rev": "ad28ea4487f05916463e2423a55166280e8254b5"
 		},
@@ -106,20 +110,32 @@
 			"Rev": "fa3f63826f7c23912c15263591e65d54d080b458"
 		},
 		{
-			"ImportPath": "github.com/newrelic-forks/memberlist",
-			"Rev": "7b2150b153e09f91ab7655b4bc54e17d9ab86c6f"
+			"ImportPath": "github.com/hashicorp/go-multierror",
+			"Rev": "d30f09973e19c1dfcd120b2d9c4f168e68d6b5d5"
+		},
+		{
+			"ImportPath": "github.com/miekg/dns",
+			"Rev": "5d001d020961ae1c184f9f8152fdc73810481677"
 		},
 		{
 			"ImportPath": "github.com/newrelic/sidecar/catalog",
-			"Rev": "524fa5d557d5356ea4ba16db64537b2a9cf9aaba"
+			"Rev": "cfb45e013269c4ff2bce364e7e6bb88fb3e84d98"
+		},
+		{
+			"ImportPath": "github.com/newrelic/sidecar/haproxy",
+			"Rev": "cfb45e013269c4ff2bce364e7e6bb88fb3e84d98"
 		},
 		{
 			"ImportPath": "github.com/newrelic/sidecar/output",
-			"Rev": "524fa5d557d5356ea4ba16db64537b2a9cf9aaba"
+			"Rev": "cfb45e013269c4ff2bce364e7e6bb88fb3e84d98"
 		},
 		{
 			"ImportPath": "github.com/newrelic/sidecar/service",
-			"Rev": "524fa5d557d5356ea4ba16db64537b2a9cf9aaba"
+			"Rev": "cfb45e013269c4ff2bce364e7e6bb88fb3e84d98"
+		},
+		{
+			"ImportPath": "github.com/nitro/memberlist",
+			"Rev": "490eb18c36b5181b667a4cf41d05eabacd855aad"
 		},
 		{
 			"ImportPath": "github.com/opencontainers/runc/libcontainer/user",
