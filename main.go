@@ -38,7 +38,7 @@ type CliOpts struct {
 }
 
 type ApiErrors struct {
-	Errors []error `json:"errors"`
+	Errors []string `json:"errors"`
 }
 
 type ApiStatus struct {
@@ -73,18 +73,18 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	response.Header().Set("Content-Type", "application/json")
 
-	var errors []error
+	errors := make([]string, 0)
 
 	err := run("test -f " + proxy.PidFile + " && ps aux `cat " + proxy.PidFile + "`")
 	if err != nil {
-		errors = append(errors, fmt.Errorf("No HAproxy running!"))
+		errors = append(errors, "No HAproxy running!")
 	}
 
 	stateLock.Lock()
 	defer stateLock.Unlock()
 
 	if updateSuccess == false {
-		errors = append(errors, fmt.Errorf("Last attempted HAproxy config write failed!"))
+		errors = append(errors, "Last attempted HAproxy config write failed!")
 	}
 
 	if len(errors) != 0 {
@@ -107,7 +107,7 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 
 	bytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		message, _ := json.Marshal(ApiErrors{[]error{err}})
+		message, _ := json.Marshal(ApiErrors{[]string{err.Error()}})
 		response.Write(message)
 		response.WriteHeader(http.StatusInternalServerError)
 		return
