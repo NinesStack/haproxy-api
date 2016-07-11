@@ -87,7 +87,7 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 		errors = append(errors, "Last attempted HAproxy config write failed!")
 	}
 
-	if len(errors) != 0 {
+	if errors != nil && len(errors) != 0 {
 		message, _ := json.Marshal(ApiErrors{errors})
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write(message)
