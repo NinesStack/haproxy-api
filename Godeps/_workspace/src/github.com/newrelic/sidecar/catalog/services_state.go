@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"regexp"
 	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/armon/go-metrics"
-	"github.com/newrelic-forks/memberlist"
+	"github.com/nitro/memberlist"
 	"github.com/relistan/go-director"
 	"github.com/newrelic/sidecar/output"
 	"github.com/newrelic/sidecar/service"
@@ -64,9 +63,9 @@ type ServicesState struct {
 	Servers             map[string]*Server
 	Hostname            string
 	Broadcasts          chan [][]byte
-	ServiceNameMatch    *regexp.Regexp // How we match service names
 	LastChanged         time.Time
 	listeners           []chan ChangeEvent
+	listenerLock        sync.Mutex
 	tombstoneRetransmit time.Duration
 	sync.Mutex
 }
@@ -178,7 +177,11 @@ func (state *ServicesState) NotifyListeners(hostname string, changedTime time.Ti
 		log.Debugf("Skipping listeners, there are none")
 		return
 	}
+
+	log.Infof("Notifying listeners of change at %s", changedTime.String())
+
 	event := ChangeEvent{Hostname: hostname, Time: changedTime}
+	state.listenerLock.Lock()
 	for _, listener := range state.listeners {
 		select {
 		case listener <- event:
@@ -187,13 +190,16 @@ func (state *ServicesState) NotifyListeners(hostname string, changedTime time.Ti
 			log.Error("NotifyListeners(): Can't send to listener!")
 		}
 	}
+	state.listenerLock.Unlock()
 }
 
 // Add an event listener channel to the list that will be notified on
 // major state change events. Channels must be buffered by at least 1
 // or they will block. Channels must be ready to receive input.
 func (state *ServicesState) AddListener(listener chan ChangeEvent) {
+	state.listenerLock.Lock()
 	state.listeners = append(state.listeners, listener)
+	state.listenerLock.Unlock()
 	log.Debugf("AddListener(): new count %d", len(state.listeners))
 }
 
@@ -318,8 +324,8 @@ func (state *ServicesState) IsNewService(svc *service.Service) bool {
 	return false
 }
 
-// Loops forever, keeping transmitting info about our containers
-// on the broadcast channel. Intended to run as a background goroutine.
+// Loops forever, transmitting info about our containers on the
+// broadcast channel. Intended to run as a background goroutine.
 func (state *ServicesState) BroadcastServices(fn func() []service.Service, looper director.Looper) {
 	lastTime := time.Unix(0, 0)
 
@@ -333,11 +339,12 @@ func (state *ServicesState) BroadcastServices(fn func() []service.Service, loope
 		for _, svc := range servicesList {
 			isNew := state.IsNewService(&svc)
 
+			// We'll broadcast it now if it's new or we've hit refresh window
 			if isNew {
-				log.Println("Found service changes!")
+				log.Debug("Found service changes in BroadcastServices()")
 				haveNewServices = true
 				services = append(services, svc)
-				// We'll broadcast it now if it's new or we've hit refresh window
+			// Check that refresh window... is it time?
 			} else if time.Now().UTC().Add(0 - ALIVE_BROADCAST_INTERVAL).After(lastTime) {
 				services = append(services, svc)
 			}
@@ -469,7 +476,7 @@ func (state *ServicesState) TombstoneOthersServices() []service.Service {
 func (state *ServicesState) TombstoneServices(hostname string, containerList []service.Service) []service.Service {
 
 	if !state.HasServer(hostname) {
-		println("TombstoneServices(): New host or not running services, skipping.")
+		log.Debug("TombstoneServices(): New host or not running services, skipping.")
 		return nil
 	}
 	// Build a map from the list first
@@ -511,26 +518,6 @@ func (state *ServicesState) EachService(fn func(hostname *string, serviceId *str
 	})
 }
 
-// Return a properly regex-matched name for the service, or failing that,
-// the Image ID which we use to stand in for the name of the service.
-func (state *ServicesState) ServiceName(svc *service.Service) string {
-	var svcName string
-
-	if state.ServiceNameMatch != nil {
-		toMatch := []byte(svc.Name)
-		matches := state.ServiceNameMatch.FindSubmatch(toMatch)
-		if len(matches) < 1 {
-			svcName = svc.Image
-		} else {
-			svcName = string(matches[1])
-		}
-	} else {
-		svcName = svc.Image
-	}
-
-	return svcName
-}
-
 // Group the services into a map by service name rather than by the
 // hosts they run on.
 func (state *ServicesState) ByService() map[string][]*service.Service {
@@ -538,11 +525,10 @@ func (state *ServicesState) ByService() map[string][]*service.Service {
 
 	state.EachServiceSorted(
 		func(hostname *string, serviceId *string, svc *service.Service) {
-			svcName := state.ServiceName(svc)
-			if _, ok := serviceMap[svcName]; !ok {
-				serviceMap[svcName] = make([]*service.Service, 0, 3)
+			if _, ok := serviceMap[svc.Name]; !ok {
+				serviceMap[svc.Name] = make([]*service.Service, 0, 3)
 			}
-			serviceMap[svcName] = append(serviceMap[svcName], svc)
+			serviceMap[svc.Name] = append(serviceMap[svc.Name], svc)
 		},
 	)
 
