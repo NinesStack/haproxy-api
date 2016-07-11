@@ -94,7 +94,10 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	lastChanged := currentState.LastChanged
+	var lastChanged time.Time
+	if currentState != nil {
+		lastChanged = currentState.LastChanged
+	}
 
 	message, _ := json.Marshal(ApiStatus{Message: "Healthy!", LastChanged: lastChanged.String()})
 	response.Write(message)
@@ -193,6 +196,7 @@ func fetchState(url string) error {
 		return err
 	}
 
+	currentState = state
 	writeAndReload(state)
 
 	return nil
