@@ -98,7 +98,20 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 
 	message, _ := json.Marshal(ApiStatus{Message: "Healthy!", LastChanged: lastChanged.String()})
 	response.Write(message)
-	return
+}
+
+func stateHandler(response http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
+	response.Header().Set("Content-Type", "application/json")
+
+	if currentState == nil {
+		message, _ := json.Marshal(ApiErrors{[]string{"No currently stored state"}})
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write(message)
+		return
+	}
+
+	response.Write(currentState.Encode())
 }
 
 func updateHandler(response http.ResponseWriter, req *http.Request) {
@@ -108,8 +121,8 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 	bytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		message, _ := json.Marshal(ApiErrors{[]string{err.Error()}})
-		response.Write(message)
 		response.WriteHeader(http.StatusInternalServerError)
+		response.Write(message)
 		return
 	}
 
@@ -193,6 +206,7 @@ func serveHttp(listenIp string, listenPort int) {
 
 	router.HandleFunc("/update", updateHandler).Methods("POST")
 	router.HandleFunc("/health", healthHandler).Methods("GET")
+	router.HandleFunc("/state", stateHandler).Methods("GET")
 	http.Handle("/", handlers.LoggingHandler(os.Stdout, router))
 
 	err := http.ListenAndServe(listenStr, nil)
