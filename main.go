@@ -19,29 +19,31 @@ import (
 )
 
 const (
-	RELOAD_BUFFER    = 256
+	RELOAD_BUFFER = 256
 	// A new service usually comes in as three events.
 	// By 5 seconds it's usually alive.
 	RELOAD_HOLD_DOWN = 5 * time.Second
 )
 
 var (
-	proxy        *haproxy.HAproxy
-	stateLock    sync.Mutex
-	reloadChan   chan time.Time
-	currentState *catalog.ServicesState
+	proxy         *haproxy.HAproxy
+	stateLock     sync.Mutex
+	reloadChan    chan time.Time
+	currentState  *catalog.ServicesState
+	updateSuccess bool
 )
 
 type CliOpts struct {
 	ConfigFile *string
 }
 
-type ApiError struct {
-	Error string `json:"error"`
+type ApiErrors struct {
+	Errors []error `json:"errors"`
 }
 
-type ApiMessage struct {
-	Message string `json:"message"`
+type ApiStatus struct {
+	Message     string `json:"message"`
+	LastChanged string `json:"last_changed"`
 }
 
 func exitWithError(err error, message string) {
@@ -71,15 +73,30 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	response.Header().Set("Content-Type", "application/json")
 
+	var errors []error
+
 	err := run("test -f " + proxy.PidFile + " && ps aux `cat " + proxy.PidFile + "`")
 	if err != nil {
-		message, _ := json.Marshal(ApiError{"No HAproxy running!"})
+		errors = append(errors, fmt.Errorf("No HAproxy running!"))
+	}
+
+	stateLock.Lock()
+	defer stateLock.Unlock()
+
+	if updateSuccess == false {
+		errors = append(errors, fmt.Errorf("Last attempted HAproxy config write failed!"))
+	}
+
+	if len(errors) != 0 {
+		message, _ := json.Marshal(ApiErrors{errors})
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write(message)
 		return
 	}
 
-	message, _ := json.Marshal(ApiMessage{"Healthy!"})
+	lastChanged := currentState.LastChanged
+
+	message, _ := json.Marshal(ApiStatus{Message: "Healthy!", LastChanged: lastChanged.String()})
 	response.Write(message)
 	return
 }
@@ -90,7 +107,7 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 
 	bytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		message, _ := json.Marshal(ApiError{err.Error()})
+		message, _ := json.Marshal(ApiErrors{[]error{err}})
 		response.Write(message)
 		response.WriteHeader(http.StatusInternalServerError)
 		return
@@ -135,7 +152,8 @@ func processUpdates() {
 
 func writeAndReload(state *catalog.ServicesState) {
 	log.Info("Updating HAproxy")
-	proxy.WriteAndReload(state)
+	err := proxy.WriteAndReload(state)
+	updateSuccess = (err == nil)
 }
 
 func updateState(state *catalog.ServicesState) {
