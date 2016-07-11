@@ -42,8 +42,8 @@ type ApiErrors struct {
 }
 
 type ApiStatus struct {
-	Message     string `json:"message"`
-	LastChanged string `json:"last_changed"`
+	Message     string    `json:"message"`
+	LastChanged time.Time `json:"last_changed"`
 }
 
 func exitWithError(err error, message string) {
@@ -69,12 +69,16 @@ func run(command string) error {
 	return err
 }
 
+// The health check endpoint. Tells us if HAproxy is running and has
+// been properly configured. Since this is critical infrastructure this
+// helps make sure a host is not "down" by havign the proxy down.
 func healthHandler(response http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	response.Header().Set("Content-Type", "application/json")
 
 	errors := make([]string, 0)
 
+	// Do we have an HAproxy instance running?
 	err := run("test -f " + proxy.PidFile + " && ps aux `cat " + proxy.PidFile + "`")
 	if err != nil {
 		errors = append(errors, "No HAproxy running!")
@@ -83,10 +87,12 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 	stateLock.Lock()
 	defer stateLock.Unlock()
 
+	// We were able to write out the template and reload the last time we tried?
 	if updateSuccess == false {
 		errors = append(errors, "Last attempted HAproxy config write failed!")
 	}
 
+	// Umm, crap, something went wrong.
 	if errors != nil && len(errors) != 0 {
 		message, _ := json.Marshal(ApiErrors{errors})
 		response.WriteHeader(http.StatusInternalServerError)
@@ -99,7 +105,7 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 		lastChanged = currentState.LastChanged
 	}
 
-	message, _ := json.Marshal(ApiStatus{Message: "Healthy!", LastChanged: lastChanged.String()})
+	message, _ := json.Marshal(ApiStatus{Message: "Healthy!", LastChanged: lastChanged})
 	response.Write(message)
 }
 
@@ -138,6 +144,7 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 	updateState(state)
 }
 
+// Loop forever, processing updates to the state.
 func processUpdates() {
 	for {
 		// Batch up to RELOAD_BUFFER number updates into a
@@ -166,12 +173,15 @@ func processUpdates() {
 	}
 }
 
+// Write out the HAproxy config and reload the instance
 func writeAndReload(state *catalog.ServicesState) {
 	log.Info("Updating HAproxy")
 	err := proxy.WriteAndReload(state)
 	updateSuccess = (err == nil)
 }
 
+// Process and update by setting the current state and queueing
+// a writeAndReload().
 func updateState(state *catalog.ServicesState) {
 	stateLock.Lock()
 	defer stateLock.Unlock()
@@ -179,6 +189,8 @@ func updateState(state *catalog.ServicesState) {
 	reloadChan <- time.Now().UTC()
 }
 
+// Used to fetch the current state from a Sidecar endpoint, usually
+// on startup of this process, when the currentState is empty.
 func fetchState(url string) error {
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Get(url)
@@ -202,6 +214,8 @@ func fetchState(url string) error {
 	return nil
 }
 
+// Start the HTTP server and begin handling requests. This is a
+// blocking call.
 func serveHttp(listenIp string, listenPort int) {
 	listenStr := fmt.Sprintf("%s:%d", listenIp, listenPort)
 
