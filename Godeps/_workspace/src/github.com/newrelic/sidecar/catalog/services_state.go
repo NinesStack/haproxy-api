@@ -9,10 +9,10 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/armon/go-metrics"
-	"github.com/nitro/memberlist"
-	"github.com/relistan/go-director"
 	"github.com/newrelic/sidecar/output"
 	"github.com/newrelic/sidecar/service"
+	"github.com/nitro/memberlist"
+	"github.com/relistan/go-director"
 )
 
 // catalog handles all of the eventual-consistency mechanisms for
@@ -34,8 +34,9 @@ const (
 // state change event. It is passed to listeners over the listeners channel in the
 // state object.
 type ChangeEvent struct {
-	Hostname string
-	Time     time.Time
+	Service        service.Service
+	PreviousStatus int
+	Time           time.Time
 }
 
 // Holds the state about one server in our cluster
@@ -61,12 +62,12 @@ func NewServer(name string) *Server {
 // Holds the state about all the servers in the cluster
 type ServicesState struct {
 	Servers             map[string]*Server
-	Hostname            string
-	Broadcasts          chan [][]byte
 	LastChanged         time.Time
-	listeners           []chan ChangeEvent
-	listenerLock        sync.Mutex
-	tombstoneRetransmit time.Duration
+	Hostname            string             `json:"-"`
+	Broadcasts          chan [][]byte      `json:"-"`
+	listeners           []chan ChangeEvent `json:"-"`
+	listenerLock        sync.Mutex         `json:"-"`
+	tombstoneRetransmit time.Duration      `json:"-"`
 	sync.Mutex
 }
 
@@ -94,7 +95,7 @@ func (server *Server) HasService(id string) bool {
 // Return a Marshaled/Encoded byte array that can be deocoded with
 // catalog.Decode()
 func (state *ServicesState) Encode() []byte {
-	jsonData, err := json.Marshal(state.Servers)
+	jsonData, err := json.Marshal(state)
 	if err != nil {
 		log.Error("ERROR: Failed to Marshal state")
 		return []byte{}
@@ -139,6 +140,8 @@ func (state *ServicesState) ExpireServer(hostname string) {
 	tombstones := make([]service.Service, 0, len(state.Servers[hostname].Services))
 
 	for _, svc := range state.Servers[hostname].Services {
+		previousStatus := svc.Status
+		state.ServiceChanged(svc, previousStatus, svc.Updated)
 		svc.Tombstone()
 		tombstones = append(tombstones, *svc)
 	}
@@ -147,32 +150,33 @@ func (state *ServicesState) ExpireServer(hostname string) {
 		tombstones,
 		director.NewTimedLooper(TOMBSTONE_COUNT, state.tombstoneRetransmit, nil),
 	)
-	state.ServerChanged(hostname, time.Now().UTC())
+}
+
+// Tell the state that a particular service transitioned from one state to another.
+func (state *ServicesState) ServiceChanged(svc *service.Service, previousStatus int, updated time.Time) {
+	state.serverChanged(svc.Hostname, updated)
+	state.NotifyListeners(svc, previousStatus, state.LastChanged)
 }
 
 // Tell the state that something changed on a particular server so that it
-// can keep the timestamps up to date. This is how we know something has
-// transitioned state.
-func (state *ServicesState) ServerChanged(hostname string, updated time.Time) {
+// can keep the timestamps up to date.
+func (state *ServicesState) serverChanged(hostname string, updated time.Time) {
 	if !state.HasServer(hostname) {
 		log.Errorf("Attempt to change a server we don't have! (%s)", hostname)
 		return
 	}
 
+	state.Lock()
 	state.Servers[hostname].LastUpdated = updated
 	state.Servers[hostname].LastChanged = updated
-
-	state.Lock()
 	state.LastChanged = updated
 	state.Unlock()
-
-	state.NotifyListeners(hostname, state.LastChanged)
 }
 
 // Tell all of our listeners that something changed for a host at
 // set timestamp. See AddListener() for information about how channels
 // must be configured.
-func (state *ServicesState) NotifyListeners(hostname string, changedTime time.Time) {
+func (state *ServicesState) NotifyListeners(svc *service.Service, previousStatus int, changedTime time.Time) {
 	if len(state.listeners) < 1 {
 		log.Debugf("Skipping listeners, there are none")
 		return
@@ -180,7 +184,7 @@ func (state *ServicesState) NotifyListeners(hostname string, changedTime time.Ti
 
 	log.Infof("Notifying listeners of change at %s", changedTime.String())
 
-	event := ChangeEvent{Hostname: hostname, Time: changedTime}
+	event := ChangeEvent{Service: *svc, PreviousStatus: previousStatus, Time: changedTime}
 	state.listenerLock.Lock()
 	for _, listener := range state.listeners {
 		select {
@@ -217,12 +221,12 @@ func (state *ServicesState) AddServiceEntry(entry service.Service) {
 	// Only apply changes that are newer or services are missing
 	if !server.HasService(entry.ID) {
 		server.Services[entry.ID] = &entry
-		state.ServerChanged(entry.Hostname, entry.Updated)
+		state.ServiceChanged(&entry, service.UNKNOWN, entry.Updated)
 		state.retransmit(entry)
 	} else if entry.Invalidates(server.Services[entry.ID]) {
 		server.LastUpdated = entry.Updated
 		if server.Services[entry.ID].Status != entry.Status {
-			state.ServerChanged(entry.Hostname, entry.Updated)
+			state.ServiceChanged(&entry, server.Services[entry.ID].Status, entry.Updated)
 		}
 		server.Services[entry.ID] = &entry
 		// We tell our gossip peers about the updated service
@@ -344,7 +348,7 @@ func (state *ServicesState) BroadcastServices(fn func() []service.Service, loope
 				log.Debug("Found service changes in BroadcastServices()")
 				haveNewServices = true
 				services = append(services, svc)
-			// Check that refresh window... is it time?
+				// Check that refresh window... is it time?
 			} else if time.Now().UTC().Add(0 - ALIVE_BROADCAST_INTERVAL).After(lastTime) {
 				services = append(services, svc)
 			}
@@ -462,9 +466,10 @@ func (state *ServicesState) TombstoneOthersServices() []service.Service {
 			// we didn't see. This might happen when any node is removed from
 			// cluster and re-joins, for example. So we can't use svc.Tombstone()
 			// which updates the timestamp to Now().UTC()
+			previousStatus := svc.Status
 			svc.Status = service.TOMBSTONE
 			svc.Updated = svc.Updated.Add(time.Second)
-			state.ServerChanged(svc.Hostname, svc.Updated)
+			state.ServiceChanged(svc, previousStatus, svc.Updated)
 
 			result = append(result, *svc)
 		}
@@ -491,8 +496,9 @@ func (state *ServicesState) TombstoneServices(hostname string, containerList []s
 	for id, svc := range services {
 		if _, ok := mapping[id]; !ok && !svc.IsTombstone() {
 			log.Warnf("Tombstoning %s", svc.ID)
+			previousStatus := svc.Status
 			svc.Tombstone()
-			state.ServerChanged(hostname, svc.Updated)
+			state.ServiceChanged(svc, previousStatus, svc.Updated)
 
 			// Tombstone each record twice to help with receipt
 			for i := 0; i < 2; i++ {
@@ -547,7 +553,7 @@ func makeServiceMapping(svcList []service.Service) map[string]*service.Service {
 // Take a byte slice and return a properly reconstituted state struct
 func Decode(data []byte) (*ServicesState, error) {
 	newState := NewServicesState()
-	err := json.Unmarshal(data, &newState.Servers)
+	err := json.Unmarshal(data, &newState)
 	if err != nil {
 		log.Errorf("Error decoding state! (%s)", err.Error())
 	}

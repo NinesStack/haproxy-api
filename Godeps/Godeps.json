@@ -119,19 +119,19 @@
 		},
 		{
 			"ImportPath": "github.com/newrelic/sidecar/catalog",
-			"Rev": "cfb45e013269c4ff2bce364e7e6bb88fb3e84d98"
+			"Rev": "8404a09c491adb58ce13bca5ad1cbd28ec756f91"
 		},
 		{
 			"ImportPath": "github.com/newrelic/sidecar/haproxy",
-			"Rev": "cfb45e013269c4ff2bce364e7e6bb88fb3e84d98"
+			"Rev": "8404a09c491adb58ce13bca5ad1cbd28ec756f91"
 		},
 		{
 			"ImportPath": "github.com/newrelic/sidecar/output",
-			"Rev": "cfb45e013269c4ff2bce364e7e6bb88fb3e84d98"
+			"Rev": "8404a09c491adb58ce13bca5ad1cbd28ec756f91"
 		},
 		{
 			"ImportPath": "github.com/newrelic/sidecar/service",
-			"Rev": "cfb45e013269c4ff2bce364e7e6bb88fb3e84d98"
+			"Rev": "8404a09c491adb58ce13bca5ad1cbd28ec756f91"
 		},
 		{
 			"ImportPath": "github.com/nitro/memberlist",
