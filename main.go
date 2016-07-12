@@ -109,6 +109,7 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 	response.Write(message)
 }
 
+// Returns the currently stored state as a JSON blob
 func stateHandler(response http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	response.Header().Set("Content-Type", "application/json")
@@ -123,6 +124,7 @@ func stateHandler(response http.ResponseWriter, req *http.Request) {
 	response.Write(currentState.Encode())
 }
 
+// Receives POSTed state updates from a Sidecar instance
 func updateHandler(response http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	response.Header().Set("Content-Type", "application/json")
