@@ -275,8 +275,6 @@ func main() {
 	opts := parseCommandLine()
 	config := parseConfig(*opts.ConfigFile)
 
-	log.SetLevel(log.DebugLevel)
-
 	proxy = config.HAproxy
 
 	reloadChan = make(chan time.Time, RELOAD_BUFFER)
