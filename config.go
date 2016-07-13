@@ -15,8 +15,9 @@ type Config struct {
 }
 
 type ApiConfig struct {
-	BindIP   string `toml:"bind_ip"`
-	BindPort int    `toml:"bind_port"`
+	BindIP       string `toml:"bind_ip"`
+	BindPort     int    `toml:"bind_port"`
+	LoggingLevel string `toml:"logging_level"`
 }
 
 type SidecarConfig struct {
@@ -57,5 +58,22 @@ func parseConfig(path string) *Config {
 		config.HAproxyApi.BindPort = 7778
 	}
 
+	configureLoggingLevel(config.HAproxyApi.LoggingLevel)
+
 	return &config
+}
+
+func configureLoggingLevel(level string) {
+	switch {
+	case len(level) == 0:
+		log.SetLevel(log.InfoLevel)
+	case level == "info":
+		log.SetLevel(log.InfoLevel)
+	case level == "warn":
+		log.SetLevel(log.WarnLevel)
+	case level == "error":
+		log.SetLevel(log.ErrorLevel)
+	case level == "debug":
+		log.SetLevel(log.DebugLevel)
+	}
 }

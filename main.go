@@ -15,14 +15,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/newrelic/sidecar/catalog"
 	"github.com/newrelic/sidecar/haproxy"
+	"github.com/newrelic/sidecar/service"
 	"gopkg.in/alecthomas/kingpin.v1"
 )
 
 const (
 	RELOAD_BUFFER = 256
-	// A new service usually comes in as three events.
-	// By 5 seconds it's usually alive.
-	RELOAD_HOLD_DOWN = 5 * time.Second
+	RELOAD_HOLD_DOWN = 5 * time.Second // Reload at worst every 5 seconds
 )
 
 var (
@@ -129,7 +128,7 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	response.Header().Set("Content-Type", "application/json")
 
-	bytes, err := ioutil.ReadAll(req.Body)
+	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		message, _ := json.Marshal(ApiErrors{[]string{err.Error()}})
 		response.WriteHeader(http.StatusInternalServerError)
@@ -137,13 +136,54 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	state, err := catalog.Decode(bytes)
+	var event catalog.StateChangedEvent
+	err = json.Unmarshal(data, &event)
 	if err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	updateState(state)
+	stateLock.Lock()
+	currentState = &event.State
+	stateLock.Unlock()
+
+	maybeNotify(event.ChangeEvent.PreviousStatus, event.ChangeEvent.Service.Status)
+}
+
+// Check all the state transitions and only update HAproxy when a change
+// will affect service availability.
+func maybeNotify(oldState int, newState int) {
+	updated := false
+
+	log.Debugf("Checking event. OldStatus: %s NewStatus: %s",
+		service.StatusString(oldState), service.StatusString(newState),
+	)
+
+	// Compare old and new states to find significant changes only
+	switch newState {
+	case service.ALIVE:
+		updated = true
+		enqueueUpdate()
+	case service.TOMBSTONE:
+		updated = true
+		enqueueUpdate()
+	case service.UNKNOWN:
+		if oldState == service.ALIVE {
+			updated = true
+			enqueueUpdate()
+		}
+	case service.UNHEALTHY:
+		if oldState == service.ALIVE {
+			updated = true
+			enqueueUpdate()
+		}
+	default:
+		log.Errorf("Got unknown service change status: %d", newState)
+	}
+
+	if !updated {
+		log.Debugf("Skipped HAproxy update due to state machine check")
+	}
 }
 
 // Loop forever, processing updates to the state.
@@ -182,12 +222,8 @@ func writeAndReload(state *catalog.ServicesState) {
 	updateSuccess = (err == nil)
 }
 
-// Process and update by setting the current state and queueing
-// a writeAndReload().
-func updateState(state *catalog.ServicesState) {
-	stateLock.Lock()
-	defer stateLock.Unlock()
-	currentState = state
+// Process and update by queueing a writeAndReload().
+func enqueueUpdate() {
 	reloadChan <- time.Now().UTC()
 }
 
@@ -238,6 +274,8 @@ func serveHttp(listenIp string, listenPort int) {
 func main() {
 	opts := parseCommandLine()
 	config := parseConfig(*opts.ConfigFile)
+
+	log.SetLevel(log.DebugLevel)
 
 	proxy = config.HAproxy
 
