@@ -20,16 +20,17 @@ import (
 )
 
 const (
-	RELOAD_BUFFER = 256
+	RELOAD_BUFFER    = 256
 	RELOAD_HOLD_DOWN = 5 * time.Second // Reload at worst every 5 seconds
 )
 
 var (
-	proxy         *haproxy.HAproxy
-	stateLock     sync.Mutex
-	reloadChan    chan time.Time
-	currentState  *catalog.ServicesState
-	updateSuccess bool
+	proxy          *haproxy.HAproxy
+	stateLock      sync.Mutex
+	reloadChan     chan time.Time
+	currentState   *catalog.ServicesState
+	lastSvcChanged *service.Service
+	updateSuccess  bool
 )
 
 type CliOpts struct {
@@ -41,8 +42,9 @@ type ApiErrors struct {
 }
 
 type ApiStatus struct {
-	Message     string    `json:"message"`
-	LastChanged time.Time `json:"last_changed"`
+	Message        string           `json:"message"`
+	LastChanged    time.Time        `json:"last_changed"`
+	ServiceChanged *service.Service `json:"last_service_changed"`
 }
 
 func exitWithError(err error, message string) {
@@ -104,7 +106,12 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 		lastChanged = currentState.LastChanged
 	}
 
-	message, _ := json.Marshal(ApiStatus{Message: "Healthy!", LastChanged: lastChanged})
+	message, _ := json.Marshal(ApiStatus{
+		Message:        "Healthy!",
+		LastChanged:    lastChanged,
+		ServiceChanged: lastSvcChanged,
+	})
+
 	response.Write(message)
 }
 
@@ -136,18 +143,20 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var event catalog.StateChangedEvent
-	err = json.Unmarshal(data, &event)
+	var evt catalog.StateChangedEvent
+	err = json.Unmarshal(data, &evt)
 	if err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	stateLock.Lock()
-	currentState = &event.State
+	if currentState.LastChanged.Before(evt.State.LastChanged) {
+		currentState = &evt.State
+		lastSvcChanged = &evt.ChangeEvent.Service
+		maybeNotify(evt.ChangeEvent.PreviousStatus, evt.ChangeEvent.Service.Status)
+	}
 	stateLock.Unlock()
-
-	maybeNotify(event.ChangeEvent.PreviousStatus, event.ChangeEvent.Service.Status)
 }
 
 // Check all the state transitions and only update HAproxy when a change
