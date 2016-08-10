@@ -151,7 +151,7 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 	}
 
 	stateLock.Lock()
-	if currentState.LastChanged.Before(evt.State.LastChanged) {
+	if currentState == nil || currentState.LastChanged.Before(evt.State.LastChanged) {
 		currentState = &evt.State
 		lastSvcChanged = &evt.ChangeEvent.Service
 		maybeNotify(evt.ChangeEvent.PreviousStatus, evt.ChangeEvent.Service.Status)
