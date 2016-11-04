@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/nitro/haproxy-api",
-	"GoVersion": "go1.5",
-	"GodepVersion": "v67",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v74",
 	"Deps": [
 		{
 			"ImportPath": "github.com/BurntSushi/toml",
@@ -119,19 +119,23 @@
 		},
 		{
 			"ImportPath": "github.com/newrelic/sidecar/catalog",
-			"Rev": "9eac9c4e354b127a3705b085815927f71816e3ab"
+			"Comment": "v1.0.0-11-geb24fe2",
+			"Rev": "eb24fe214f4b59b107d4a19ae5c53ce6ca9a7ad7"
 		},
 		{
 			"ImportPath": "github.com/newrelic/sidecar/haproxy",
-			"Rev": "9eac9c4e354b127a3705b085815927f71816e3ab"
+			"Comment": "v1.0.0-11-geb24fe2",
+			"Rev": "eb24fe214f4b59b107d4a19ae5c53ce6ca9a7ad7"
 		},
 		{
 			"ImportPath": "github.com/newrelic/sidecar/output",
-			"Rev": "9eac9c4e354b127a3705b085815927f71816e3ab"
+			"Comment": "v1.0.0-11-geb24fe2",
+			"Rev": "eb24fe214f4b59b107d4a19ae5c53ce6ca9a7ad7"
 		},
 		{
 			"ImportPath": "github.com/newrelic/sidecar/service",
-			"Rev": "9eac9c4e354b127a3705b085815927f71816e3ab"
+			"Comment": "v1.0.0-11-geb24fe2",
+			"Rev": "eb24fe214f4b59b107d4a19ae5c53ce6ca9a7ad7"
 		},
 		{
 			"ImportPath": "github.com/nitro/memberlist",
@@ -144,7 +148,7 @@
 		},
 		{
 			"ImportPath": "github.com/relistan/go-director",
-			"Rev": "95dd09f61051613106a9b3cd9813bda3f5f5f87d"
+			"Rev": "9273dae8c839a114aa4472165f84e057d5b12e09"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
@@ -152,7 +156,7 @@
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
-			"Rev": "833a04a10549a95dc34458c195cbad61bbb6cb4d"
+			"Rev": "002cbb5f952456d0c50e0d2aff17ea5eca716979"
 		},
 		{
 			"ImportPath": "gopkg.in/alecthomas/kingpin.v1",
