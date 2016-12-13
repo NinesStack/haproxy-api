@@ -31,6 +31,7 @@ var (
 	currentState   *catalog.ServicesState
 	lastSvcChanged *service.Service
 	updateSuccess  bool
+	version        string = "Version not set!"
 )
 
 type CliOpts struct {
@@ -45,6 +46,7 @@ type ApiStatus struct {
 	Message        string           `json:"message"`
 	LastChanged    time.Time        `json:"last_changed"`
 	ServiceChanged *service.Service `json:"last_service_changed"`
+	Version	       string		`json:"version"`
 }
 
 func exitWithError(err error, message string) {
@@ -72,7 +74,7 @@ func run(command string) error {
 
 // The health check endpoint. Tells us if HAproxy is running and has
 // been properly configured. Since this is critical infrastructure this
-// helps make sure a host is not "down" by havign the proxy down.
+// helps make sure a host is not "down" by having the proxy down.
 func healthHandler(response http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	response.Header().Set("Content-Type", "application/json")
@@ -82,6 +84,7 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 	// Do we have an HAproxy instance running?
 	err := run("test -f " + proxy.PidFile + " && ps aux `cat " + proxy.PidFile + "`")
 	if err != nil {
+		errors = append(errors, version)
 		errors = append(errors, "No HAproxy running!")
 	}
 
@@ -110,6 +113,7 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 		Message:        "Healthy!",
 		LastChanged:    lastChanged,
 		ServiceChanged: lastSvcChanged,
+		Version:	version,
 	})
 
 	response.Write(message)
