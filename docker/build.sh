@@ -60,8 +60,16 @@ build_inside_docker() {
  echo "now you might want to run: docker run -it --rm haproxy-api"
 }
 
+clean_workspace() {
+cd ${PACKAGE_DIR}
+rm 	haproxy-api docker/haproxy-api.toml	docker/last_build docker/release-notes.txt release-notes.txt
+}
+
 
 case ${1} in
+clean)
+  clean_workspace
+  ;;
 buildindocker)
   build_inside_docker
   ;;
