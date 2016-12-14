@@ -1,0 +1,22 @@
+FROM golang:1.7-alpine
+# This must be run from the root of the package directory, e.g. $GOPATH/github.com/nitro/haproxy-api
+ARG VERSION=
+ARG GITHUB_TOKEN=
+ARG DOCKER_HOST=
+RUN apk --update add bash curl tar git docker file openssl
+RUN go get github.com/aktau/github-release &&  go get github.com/tools/godep
+
+ADD . src/github.com/nitro/haproxy-api
+
+WORKDIR /go/src/github.com/nitro/haproxy-api
+RUN docker/build.sh build
+WORKDIR /go/src/github.com/nitro/haproxy-api/docker
+
+RUN tar -czvf /haproxy-api-${VERSION}.tgz .
+RUN echo "release ${VERSION} /haproxy-api-${VERSION}.tgz"
+
+# docker build -t haproxy-api-build \
+# --build-arg DOCKER_HOST=192.168.168.167:2376 \
+# --build-arg VERSION=3142 \
+# --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
+# -f docker/Dockerfile.release .

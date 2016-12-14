@@ -2,6 +2,16 @@
 
 # Simple wrapper to docker to start the named image with the correct options
 
-IMAGE=$1
+if [[ ${1+x} ]]; then
+  IMAGE=$1
+elif [ -f last_build ]; then
+  echo "Use the last build"
+  IMAGE="$(cat last_build)"
+else
+ echo "${IMAGE}"
+ echo "You need to set an image Id"
+ exit 1
+fi
+
 echo "Starting from $IMAGE"
-docker run -i -t --label SidecarDiscover=false --net=host --name=haproxy-api $IMAGE
+docker run -i -t --label SidecarDiscover=false --rm --name=haproxy-api $IMAGE

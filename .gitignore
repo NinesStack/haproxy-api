@@ -2,3 +2,4 @@ haproxy-api
 *.swp
 *.swo
 docker/templates
+.idea/

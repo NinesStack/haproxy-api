@@ -1,0 +1,2 @@
+#!/bin/bash
+docker exec haproxy-api curl http://localhost:7778/health
