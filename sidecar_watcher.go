@@ -36,9 +36,8 @@ type SidecarWatcher struct {
 func NewSidecarWatcher(url string, looper director.Looper, notifyChan chan struct{}) *SidecarWatcher {
 	tr := &http.Transport{ResponseHeaderTimeout: 0}
 
-	log.Infof("Using Sidecar connection refresh interval: %s", CONNECTION_REFRESH_TIME.String())
-
-	return &SidecarWatcher{
+	w := &SidecarWatcher{
+		RefreshConn: CONNECTION_REFRESH_TIME,
 		Client:     &http.Client{Timeout: 0, Transport: tr},
 		looper:     looper,
 		transport:  tr,
@@ -46,6 +45,10 @@ func NewSidecarWatcher(url string, looper director.Looper, notifyChan chan struc
 		timer:      time.NewTimer(CONNECTION_REFRESH_TIME),
 		url:        url,
 	}
+
+	log.Infof("Using Sidecar connection refresh interval: %s", w.RefreshConn.String())
+
+	return w
 }
 
 // onChange is a callback triggered by changed from the Sidecar /watch
@@ -72,7 +75,7 @@ func (w *SidecarWatcher) onChange(state map[string][]*service.Service, err error
 
 // Utility method to rest the timer
 func (w *SidecarWatcher) resetTimer() {
-	w.timer.Reset(CONNECTION_REFRESH_TIME)
+	w.timer.Reset(w.RefreshConn)
 }
 
 // Utility method to send the right data on the notifyChan
@@ -83,8 +86,8 @@ func (w *SidecarWatcher) notify() {
 // Follow() will attach to the /watch endpoint on a Sidecar instance and
 // send notifications on the notifyChan when something has changed on the
 // remote host. It uses a timer to guarantee that we get a refresh on the
-// open connection every CONNECTION_REFRESH_TIME so that we don't end up
-// being orphaned.
+// open connection every RefreshConn so that we don't end up being
+// orphaned.
 func (w *SidecarWatcher) Follow() {
 	var err error
 	var resp *http.Response
@@ -104,7 +107,7 @@ func (w *SidecarWatcher) Follow() {
 			return nil
 		}
 
-		// DecodeStream will trigger the callbackLoader on each event
+		// DecodeStream will trigger the onChange callback on each event
 		go catalog.DecodeStream(resp.Body, w.onChange)
 
 		// Block waiting on the timer to expire
