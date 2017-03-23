@@ -16,6 +16,14 @@ subscribed to. There might be situations like frontend gateways where it makes
 sense to subscribe it to a remote Sidecar instance. Its sole job is to receive
 state from Sidecar and configure/manage HAproxy.
 
+You may *instead* also run HAproxy-API in a follower mode where it can manage a
+local HAproxy while subscribing to a remote Sidecar. This is particularly
+useful for local development work. It is probably not the best configuration
+for production. This mode is triggered either by supplying a `hostname:port`
+combination with the `-F` flag or by supplying the `HAPROXY_API_FOLLOW`
+environment variable where the vlaue is `hostname:port` of a remote or local
+Sidecar.
+
 Configuration
 -------------
 

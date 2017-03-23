@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/nitro/haproxy-api",
+	"ImportPath": "github.com/Nitro/haproxy-api",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
 	"Deps": [
@@ -9,9 +9,41 @@
 			"Rev": "056c9bc7be7190eaa7715723883caffa5f8fa3e4"
 		},
 		{
+			"ImportPath": "github.com/Nitro/memberlist",
+			"Rev": "490eb18c36b5181b667a4cf41d05eabacd855aad"
+		},
+		{
+			"ImportPath": "github.com/Nitro/sidecar/catalog",
+			"Comment": "v1.1.3-2-g9ed008f",
+			"Rev": "9ed008f6ad7d5997101d74596f8cd9c3f388050d"
+		},
+		{
+			"ImportPath": "github.com/Nitro/sidecar/haproxy",
+			"Comment": "v1.1.3-2-g9ed008f",
+			"Rev": "9ed008f6ad7d5997101d74596f8cd9c3f388050d"
+		},
+		{
+			"ImportPath": "github.com/Nitro/sidecar/output",
+			"Comment": "v1.1.3-2-g9ed008f",
+			"Rev": "9ed008f6ad7d5997101d74596f8cd9c3f388050d"
+		},
+		{
+			"ImportPath": "github.com/Nitro/sidecar/service",
+			"Comment": "v1.1.3-2-g9ed008f",
+			"Rev": "9ed008f6ad7d5997101d74596f8cd9c3f388050d"
+		},
+		{
 			"ImportPath": "github.com/Sirupsen/logrus",
 			"Comment": "v0.10.0-16-gcd7d1bb",
 			"Rev": "cd7d1bbe41066b6c1f19780f895901052150a575"
+		},
+		{
+			"ImportPath": "github.com/alecthomas/template",
+			"Rev": "a0175ee3bccc567396460bf5acd36800cb10c49c"
+		},
+		{
+			"ImportPath": "github.com/alecthomas/template/parse",
+			"Rev": "a0175ee3bccc567396460bf5acd36800cb10c49c"
 		},
 		{
 			"ImportPath": "github.com/alecthomas/units",
@@ -118,30 +150,6 @@
 			"Rev": "5d001d020961ae1c184f9f8152fdc73810481677"
 		},
 		{
-			"ImportPath": "github.com/newrelic/sidecar/catalog",
-			"Comment": "v1.0.0-11-geb24fe2",
-			"Rev": "eb24fe214f4b59b107d4a19ae5c53ce6ca9a7ad7"
-		},
-		{
-			"ImportPath": "github.com/newrelic/sidecar/haproxy",
-			"Comment": "v1.0.0-11-geb24fe2",
-			"Rev": "eb24fe214f4b59b107d4a19ae5c53ce6ca9a7ad7"
-		},
-		{
-			"ImportPath": "github.com/newrelic/sidecar/output",
-			"Comment": "v1.0.0-11-geb24fe2",
-			"Rev": "eb24fe214f4b59b107d4a19ae5c53ce6ca9a7ad7"
-		},
-		{
-			"ImportPath": "github.com/newrelic/sidecar/service",
-			"Comment": "v1.0.0-11-geb24fe2",
-			"Rev": "eb24fe214f4b59b107d4a19ae5c53ce6ca9a7ad7"
-		},
-		{
-			"ImportPath": "github.com/nitro/memberlist",
-			"Rev": "490eb18c36b5181b667a4cf41d05eabacd855aad"
-		},
-		{
 			"ImportPath": "github.com/opencontainers/runc/libcontainer/user",
 			"Comment": "v0.1.1-93-gc6a791b",
 			"Rev": "c6a791bef906b0dfdf81e85b840bec475b8ec75e"
@@ -159,9 +167,9 @@
 			"Rev": "002cbb5f952456d0c50e0d2aff17ea5eca716979"
 		},
 		{
-			"ImportPath": "gopkg.in/alecthomas/kingpin.v1",
-			"Comment": "v1.3.7",
-			"Rev": "45f9714aa86a9624491adeaab1e9df1baf84dd38"
+			"ImportPath": "gopkg.in/alecthomas/kingpin.v2",
+			"Comment": "v2.1.11",
+			"Rev": "8cccfa8eb2e3183254457fb1749b2667fbc364c7"
 		}
 	]
 }

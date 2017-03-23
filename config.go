@@ -4,8 +4,8 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/Nitro/sidecar/haproxy"
 	log "github.com/Sirupsen/logrus"
-	"github.com/newrelic/sidecar/haproxy"
 )
 
 type Config struct {
