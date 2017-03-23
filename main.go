@@ -5,18 +5,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"sync"
 	"time"
 
+	"github.com/Nitro/sidecar/catalog"
+	"github.com/Nitro/sidecar/haproxy"
+	"github.com/Nitro/sidecar/service"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/newrelic/sidecar/catalog"
-	"github.com/newrelic/sidecar/haproxy"
-	"github.com/newrelic/sidecar/service"
-	"gopkg.in/alecthomas/kingpin.v1"
+	"github.com/relistan/go-director"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (
@@ -35,6 +37,7 @@ var (
 
 type CliOpts struct {
 	ConfigFile *string
+	Follow     *string
 }
 
 type ApiErrors struct {
@@ -55,8 +58,14 @@ func exitWithError(err error, message string) {
 
 func parseCommandLine() *CliOpts {
 	var opts CliOpts
-	opts.ConfigFile = kingpin.Flag("config-file", "The config file to use").Short('f').Default("haproxy-api.toml").String()
-	kingpin.Parse()
+
+	app := kingpin.New("haproxy-api", "").DefaultEnvars()
+	opts.ConfigFile = app.Flag("config-file", "The config file to use").
+		Short('f').Default("haproxy-api.toml").String()
+	opts.Follow = app.Flag("follow", "Actively follow this Sidecar's /watch endpoint (format ip:port)").
+		Short('F').String()
+
+	app.Parse(os.Args[1:])
 	return &opts
 }
 
@@ -238,27 +247,24 @@ func enqueueUpdate() {
 
 // Used to fetch the current state from a Sidecar endpoint, usually
 // on startup of this process, when the currentState is empty.
-func fetchState(url string) error {
+func fetchState(url string) (*catalog.ServicesState, error) {
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Get(url)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	state, err := catalog.Decode(bytes)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	currentState = state
-	writeAndReload(state)
-
-	return nil
+	return state, nil
 }
 
 // Start the HTTP server and begin handling requests. This is a
@@ -280,6 +286,61 @@ func serveHttp(listenIp string, listenPort int) {
 	}
 }
 
+// Loops in the background, waiting to be notified that something
+// has changed. When a change is received, we fetch the new state
+// (what we got wasn't in a useful format) and notify HAproxy.
+func processFollower(url string, looper director.Looper, notifyChan chan struct{}) {
+	looper.Loop(func() error {
+		<-notifyChan
+		state, err := fetchState(url)
+		if err != nil {
+			log.Errorf("Unable to fetch Sidecar state: %s", err.Error())
+			return nil
+		}
+
+		// Replace the current state with the new one
+		stateLock.Lock()
+		currentState = state
+		stateLock.Unlock()
+
+		enqueueUpdate()
+		return nil
+	})
+}
+
+// When we're in follow mode, do the business
+func handleFollowing(stateUrl string, watchUrl string, watchLooper director.Looper, processLooper director.Looper) {
+	notifyChan := make(chan struct{})
+
+	go processFollower(stateUrl, processLooper, notifyChan)
+
+	watcher := NewSidecarWatcher(watchUrl, watchLooper, notifyChan)
+	watcher.Follow()
+}
+
+// Construct the watch and state URLs from the opts and config provided
+func formUrls(opts *CliOpts, config *Config) (watchUrl string, stateUrl string) {
+	if opts.Follow == nil {
+		stateUrl = config.Sidecar.StateUrl
+	} else {
+		stateTmp, err := url.Parse("http://" + *opts.Follow)
+		if err != nil {
+			log.Fatalf("Unable to follow %s: %s", *opts.Follow, err)
+		}
+		stateTmp.Path = "/state.json"
+		stateUrl = stateTmp.String()
+
+		watchTmp, err := url.Parse("http://" + *opts.Follow)
+		if err != nil {
+			log.Fatalf("Unable to follow %s: %s", *opts.Follow, err)
+		}
+		watchTmp.Path = "/watch"
+		watchUrl = watchTmp.String()
+	}
+
+	return watchUrl, stateUrl
+}
+
 func main() {
 	opts := parseCommandLine()
 	config := parseConfig(*opts.ConfigFile)
@@ -288,12 +349,25 @@ func main() {
 
 	reloadChan = make(chan time.Time, RELOAD_BUFFER)
 
+	watchUrl, stateUrl := formUrls(opts, config)
+
 	log.Info("Fetching initial state on startup...")
-	err := fetchState(config.Sidecar.StateUrl)
+	state, err := fetchState(stateUrl)
 	if err != nil {
-		log.Errorf("Failed to fetch state from '%s'... continuing in hopes someone will post it", config.Sidecar.StateUrl)
+		log.Errorf("Failed to fetch state from '%s'... continuing in hopes someone will post it", stateUrl)
 	} else {
 		log.Info("Successfully retrieved state")
+		currentState = state
+		writeAndReload(state)
+	}
+
+	// If we're in follow mode, do that
+	if opts.Follow != nil {
+		log.Info("Running in follower mode")
+		watchLooper := director.NewFreeLooper(director.FOREVER, make(chan error))
+		processLooper := director.NewFreeLooper(director.FOREVER, make(chan error))
+
+		go handleFollowing(stateUrl, watchUrl, watchLooper, processLooper)
 	}
 
 	go processUpdates()
