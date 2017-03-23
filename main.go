@@ -319,8 +319,8 @@ func handleFollowing(stateUrl string, watchUrl string, watchLooper director.Loop
 }
 
 // Construct the watch and state URLs from the opts and config provided
-func formUrls(opts *CliOpts, config *Config) (watchUrl string, stateUrl string) {
-	if opts.Follow == nil {
+func generateUrls(opts *CliOpts, config *Config) (watchUrl string, stateUrl string) {
+	if *opts.Follow == "" {
 		stateUrl = config.Sidecar.StateUrl
 	} else {
 		stateTmp, err := url.Parse("http://" + *opts.Follow)
@@ -341,16 +341,8 @@ func formUrls(opts *CliOpts, config *Config) (watchUrl string, stateUrl string) 
 	return watchUrl, stateUrl
 }
 
-func main() {
-	opts := parseCommandLine()
-	config := parseConfig(*opts.ConfigFile)
-
-	proxy = config.HAproxy
-
-	reloadChan = make(chan time.Time, RELOAD_BUFFER)
-
-	watchUrl, stateUrl := formUrls(opts, config)
-
+// On startup in standard mode, we need to bootstrap some state
+func fetchInitialState(stateUrl string) {
 	log.Info("Fetching initial state on startup...")
 	state, err := fetchState(stateUrl)
 	if err != nil {
@@ -360,18 +352,31 @@ func main() {
 		currentState = state
 		writeAndReload(state)
 	}
+}
+
+func main() {
+	opts := parseCommandLine()
+	config := parseConfig(*opts.ConfigFile)
+
+	proxy = config.HAproxy
+
+	reloadChan = make(chan time.Time, RELOAD_BUFFER)
+	watchUrl, stateUrl := generateUrls(opts, config)
 
 	// If we're in follow mode, do that
-	if opts.Follow != nil {
+	if *opts.Follow != "" {
 		log.Info("Running in follower mode")
 		watchLooper := director.NewFreeLooper(director.FOREVER, make(chan error))
 		processLooper := director.NewFreeLooper(director.FOREVER, make(chan error))
-
 		go handleFollowing(stateUrl, watchUrl, watchLooper, processLooper)
+	} else {
+		fetchInitialState(stateUrl)
 	}
 
+	// Watch for updates and handle reloading HAproxy
 	go processUpdates()
 
+	// Run the web API and block until it completes
 	serveHttp(config.HAproxyApi.BindIP, config.HAproxyApi.BindPort)
 
 	close(reloadChan)
