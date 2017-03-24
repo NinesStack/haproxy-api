@@ -14,6 +14,7 @@ import (
 	"github.com/Nitro/sidecar/service"
 	log "github.com/Sirupsen/logrus"
 	"github.com/relistan/go-director"
+	"github.com/relistan/rubberneck"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -46,6 +47,8 @@ func parseCommandLine() *CliOpts {
 		Short('F').String()
 
 	app.Parse(os.Args[1:])
+
+	printOpts(&opts)
 	return &opts
 }
 
@@ -224,6 +227,11 @@ func fetchInitialState(stateUrl string) {
 		currentState = state
 		writeAndReload(state)
 	}
+}
+
+func printOpts(opts *CliOpts) {
+	printer := rubberneck.NewPrinter(log.Infof, rubberneck.NoAddLineFeed)
+	printer.Print(opts)
 }
 
 func main() {
