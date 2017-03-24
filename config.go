@@ -6,29 +6,36 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/Nitro/sidecar/haproxy"
 	log "github.com/Sirupsen/logrus"
+	"github.com/kelseyhightower/envconfig"
+	"github.com/relistan/rubberneck"
 )
 
 type Config struct {
-	HAproxy    *haproxy.HAproxy `toml:"haproxy"`
-	HAproxyApi *ApiConfig       `toml:"haproxy_api"`
+	HAproxyApi *ApiConfig       `toml:"haproxy_api" envconfig:"haproxy_api"`
 	Sidecar    *SidecarConfig   `tom:"sidecar"`
+	HAproxy    *haproxy.HAproxy `toml:"haproxy"`
 }
 
 type ApiConfig struct {
-	BindIP       string `toml:"bind_ip"`
-	BindPort     int    `toml:"bind_port"`
-	LoggingLevel string `toml:"logging_level"`
+	BindIP       string `toml:"bind_ip" split_words:"true"`
+	BindPort     int    `toml:"bind_port" split_words:"true"`
+	LoggingLevel string `toml:"logging_level" split_words:"true"`
 }
 
 type SidecarConfig struct {
-	StateUrl string `toml:"state_url"`
+	StateUrl string `toml:"state_url" split_words:"true"`
 }
 
 func parseConfig(path string) *Config {
 	var config Config
 	_, err := toml.DecodeFile(path, &config)
 	if err != nil {
-		exitWithError(err, "Failed to parse config file")
+		log.Errorf("Failed to parse config file: %s", err)
+	}
+
+	err = envconfig.Process("haproxy_api", &config)
+	if err != nil {
+		log.Errorf("Error processing envconfig: %s", err)
 	}
 
 	proxy := config.HAproxy
@@ -60,7 +67,14 @@ func parseConfig(path string) *Config {
 
 	configureLoggingLevel(config.HAproxyApi.LoggingLevel)
 
+	printConfig(&config)
+
 	return &config
+}
+
+func printConfig(config *Config) {
+	printer := rubberneck.NewPrinter(log.Printf, rubberneck.NoAddLineFeed)
+	printer.Print(config)
 }
 
 func configureLoggingLevel(level string) {
