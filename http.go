@@ -101,7 +101,9 @@ func updateHandler(response http.ResponseWriter, req *http.Request) {
 	var evt catalog.StateChangedEvent
 	err = json.Unmarshal(data, &evt)
 	if err != nil {
+		message, _ := json.Marshal(ApiErrors{[]string{err.Error()}})
 		response.WriteHeader(http.StatusInternalServerError)
+		response.Write(message)
 		return
 	}
 

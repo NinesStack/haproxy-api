@@ -61,15 +61,15 @@ func run(command string) error {
 
 // Check all the state transitions and only update HAproxy when a change
 // will affect service availability.
-func maybeNotify(oldState int, newState int) {
+func maybeNotify(oldStatus int, newStatus int) {
 	updated := false
 
 	log.Debugf("Checking event. OldStatus: %s NewStatus: %s",
-		service.StatusString(oldState), service.StatusString(newState),
+		service.StatusString(oldStatus), service.StatusString(newStatus),
 	)
 
 	// Compare old and new states to find significant changes only
-	switch newState {
+	switch newStatus {
 	case service.ALIVE:
 		updated = true
 		enqueueUpdate()
@@ -77,17 +77,17 @@ func maybeNotify(oldState int, newState int) {
 		updated = true
 		enqueueUpdate()
 	case service.UNKNOWN:
-		if oldState == service.ALIVE {
+		if oldStatus == service.ALIVE {
 			updated = true
 			enqueueUpdate()
 		}
 	case service.UNHEALTHY:
-		if oldState == service.ALIVE {
+		if oldStatus == service.ALIVE {
 			updated = true
 			enqueueUpdate()
 		}
 	default:
-		log.Errorf("Got unknown service change status: %d", newState)
+		log.Errorf("Got unknown service change status: %d", newStatus)
 	}
 
 	if !updated {
