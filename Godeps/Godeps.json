@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/Nitro/haproxy-api",
-	"GoVersion": "go1.7",
-	"GodepVersion": "v74",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
 	"Deps": [
 		{
 			"ImportPath": "github.com/BurntSushi/toml",
@@ -36,6 +36,11 @@
 			"ImportPath": "github.com/Sirupsen/logrus",
 			"Comment": "v0.10.0-16-gcd7d1bb",
 			"Rev": "cd7d1bbe41066b6c1f19780f895901052150a575"
+		},
+		{
+			"ImportPath": "github.com/SmartyStreets/goconvey/convey",
+			"Comment": "1.6.2-15-g3c25728",
+			"Rev": "3c2572876754c4669ae7417b219f0b30a29b32c7"
 		},
 		{
 			"ImportPath": "github.com/alecthomas/template",
@@ -146,6 +151,15 @@
 			"Rev": "d30f09973e19c1dfcd120b2d9c4f168e68d6b5d5"
 		},
 		{
+			"ImportPath": "github.com/jtolds/gls",
+			"Rev": "9a4a02dbe491bef4bab3c24fd9f3087d6c4c6690"
+		},
+		{
+			"ImportPath": "github.com/kelseyhightower/envconfig",
+			"Comment": "v1.3.0-3-g8bf4bbf",
+			"Rev": "8bf4bbfc795e2c7c8a5ea47b707453ed019e2ad4"
+		},
+		{
 			"ImportPath": "github.com/miekg/dns",
 			"Rev": "5d001d020961ae1c184f9f8152fdc73810481677"
 		},
@@ -157,6 +171,30 @@
 		{
 			"ImportPath": "github.com/relistan/go-director",
 			"Rev": "9273dae8c839a114aa4472165f84e057d5b12e09"
+		},
+		{
+			"ImportPath": "github.com/relistan/rubberneck",
+			"Rev": "588a1c05c7dcb69408cb7c2af9a1e4f8f1a2b7ae"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/assertions",
+			"Comment": "1.5.0-406-gedb6e29",
+			"Rev": "edb6e295a22c57a2aa353b2f0729b6eff9f9f4b7"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/assertions/internal/oglematchers",
+			"Comment": "1.5.0-406-gedb6e29",
+			"Rev": "edb6e295a22c57a2aa353b2f0729b6eff9f9f4b7"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/goconvey/convey/gotest",
+			"Comment": "1.6.2-15-g3c25728",
+			"Rev": "3c2572876754c4669ae7417b219f0b30a29b32c7"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/goconvey/convey/reporting",
+			"Comment": "1.6.2-15-g3c25728",
+			"Rev": "3c2572876754c4669ae7417b219f0b30a29b32c7"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
