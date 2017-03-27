@@ -258,14 +258,14 @@ func checkHAproxyPidFile(config *Config) {
 		}
 	}
 
-	if foundCount > 1 {
-		log.Fatalf("There already appears to be %d HAproxies running. Please clean up.", foundCount)
+	if foundCount > 2 {
+		log.Fatalf("There already appears to be %d HAproxies running. Please clean up.", foundCount-1)
 	}
 
 	if foundProc != nil {
 		storedPid, err := ioutil.ReadFile(config.HAproxy.PidFile)
 		if err != nil || (strconv.Itoa(foundProc.Pid()) != string(storedPid)) {
-			log.Warnf("pid file appears bogus, writing pid file")
+			log.Warnf("pid file appears bogus, writing pid file with pid %v", foundProc.Pid())
 			err = ioutil.WriteFile(config.HAproxy.PidFile, []byte(strconv.Itoa(foundProc.Pid())), 0640)
 			if err != nil {
 				log.Fatalf("Unable to write new pid file. Please clean up by hand! %s", err)
