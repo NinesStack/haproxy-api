@@ -174,7 +174,7 @@
 		},
 		{
 			"ImportPath": "github.com/relistan/rubberneck",
-			"Rev": "e4ffef6578d8fd860f494ce7dd88eeda27d0c7d8"
+			"Rev": "d89ae22dd501ccdc07acd3ff91419d1e8d5cb83c"
 		},
 		{
 			"ImportPath": "github.com/smartystreets/assertions",
