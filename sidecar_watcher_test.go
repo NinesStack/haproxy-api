@@ -6,8 +6,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	. "github.com/SmartyStreets/goconvey/convey"
 	"github.com/relistan/go-director"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func Test_NewSidecarWatcher(t *testing.T) {

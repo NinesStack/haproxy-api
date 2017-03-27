@@ -38,11 +38,6 @@
 			"Rev": "cd7d1bbe41066b6c1f19780f895901052150a575"
 		},
 		{
-			"ImportPath": "github.com/SmartyStreets/goconvey/convey",
-			"Comment": "1.6.2-15-g3c25728",
-			"Rev": "3c2572876754c4669ae7417b219f0b30a29b32c7"
-		},
-		{
 			"ImportPath": "github.com/alecthomas/template",
 			"Rev": "a0175ee3bccc567396460bf5acd36800cb10c49c"
 		},
@@ -191,14 +186,19 @@
 			"Rev": "edb6e295a22c57a2aa353b2f0729b6eff9f9f4b7"
 		},
 		{
+			"ImportPath": "github.com/smartystreets/goconvey/convey",
+			"Comment": "1.6.2-17-g3bd662e",
+			"Rev": "3bd662eac601ad6436e64776af2e112069eb2edc"
+		},
+		{
 			"ImportPath": "github.com/smartystreets/goconvey/convey/gotest",
-			"Comment": "1.6.2-15-g3c25728",
-			"Rev": "3c2572876754c4669ae7417b219f0b30a29b32c7"
+			"Comment": "1.6.2-17-g3bd662e",
+			"Rev": "3bd662eac601ad6436e64776af2e112069eb2edc"
 		},
 		{
 			"ImportPath": "github.com/smartystreets/goconvey/convey/reporting",
-			"Comment": "1.6.2-15-g3c25728",
-			"Rev": "3c2572876754c4669ae7417b219f0b30a29b32c7"
+			"Comment": "1.6.2-17-g3bd662e",
+			"Rev": "3bd662eac601ad6436e64776af2e112069eb2edc"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",

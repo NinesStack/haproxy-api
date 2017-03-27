@@ -10,7 +10,7 @@ import (
 
 	"github.com/Nitro/sidecar/catalog"
 	"github.com/Nitro/sidecar/service"
-	. "github.com/SmartyStreets/goconvey/convey"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func Test_stateHandler(t *testing.T) {
