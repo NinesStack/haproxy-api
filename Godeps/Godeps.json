@@ -164,6 +164,10 @@
 			"Rev": "5d001d020961ae1c184f9f8152fdc73810481677"
 		},
 		{
+			"ImportPath": "github.com/mitchellh/go-ps",
+			"Rev": "4fdf99ab29366514c69ccccddab5dc58b8d84062"
+		},
+		{
 			"ImportPath": "github.com/opencontainers/runc/libcontainer/user",
 			"Comment": "v0.1.1-93-gc6a791b",
 			"Rev": "c6a791bef906b0dfdf81e85b840bec475b8ec75e"
