@@ -7,7 +7,6 @@ import (
 	"github.com/Nitro/sidecar/haproxy"
 	log "github.com/Sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/relistan/rubberneck"
 )
 
 type Config struct {
@@ -67,14 +66,7 @@ func parseConfig(path string) *Config {
 
 	configureLoggingLevel(config.HAproxyApi.LoggingLevel)
 
-	printConfig(&config)
-
 	return &config
-}
-
-func printConfig(config *Config) {
-	printer := rubberneck.NewPrinter(log.Printf, rubberneck.NoAddLineFeed)
-	printer.Print(config)
 }
 
 func configureLoggingLevel(level string) {

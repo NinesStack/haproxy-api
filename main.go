@@ -48,7 +48,6 @@ func parseCommandLine() *CliOpts {
 
 	app.Parse(os.Args[1:])
 
-	printOpts(&opts)
 	return &opts
 }
 
@@ -229,14 +228,16 @@ func fetchInitialState(stateUrl string) {
 	}
 }
 
-func printOpts(opts *CliOpts) {
+func printConfig(opts *CliOpts, config *Config) {
 	printer := rubberneck.NewPrinter(log.Infof, rubberneck.NoAddLineFeed)
-	printer.Print(opts)
+	printer.PrintWithLabel("HAproxy-API starting", opts, config)
 }
 
 func main() {
 	opts := parseCommandLine()
 	config := parseConfig(*opts.ConfigFile)
+
+	printConfig(opts, config)
 
 	proxy = config.HAproxy
 
