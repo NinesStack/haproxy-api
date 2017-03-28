@@ -3,12 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/Nitro/sidecar/catalog"
+	"github.com/Nitro/sidecar/receiver"
 	"github.com/Nitro/sidecar/service"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/handlers"
@@ -28,7 +27,7 @@ type ApiStatus struct {
 // The health check endpoint. Tells us if HAproxy is running and has
 // been properly configured. Since this is critical infrastructure this
 // helps make sure a host is not "down" by havign the proxy down.
-func healthHandler(response http.ResponseWriter, req *http.Request) {
+func healthHandler(response http.ResponseWriter, req *http.Request, rcvr *receiver.Receiver) {
 	defer req.Body.Close()
 	response.Header().Set("Content-Type", "application/json")
 
@@ -40,8 +39,8 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 		errors = append(errors, "No HAproxy running!")
 	}
 
-	stateLock.Lock()
-	defer stateLock.Unlock()
+	rcvr.StateLock.Lock()
+	defer rcvr.StateLock.Unlock()
 
 	// We were able to write out the template and reload the last time we tried?
 	if updateSuccess == false {
@@ -57,76 +56,55 @@ func healthHandler(response http.ResponseWriter, req *http.Request) {
 	}
 
 	var lastChanged time.Time
-	if currentState != nil {
-		lastChanged = currentState.LastChanged
+	if rcvr.CurrentState != nil {
+		lastChanged = rcvr.CurrentState.LastChanged
 	}
 
 	message, _ := json.Marshal(ApiStatus{
 		Message:        "Healthy!",
 		LastChanged:    lastChanged,
-		ServiceChanged: lastSvcChanged,
+		ServiceChanged: rcvr.LastSvcChanged,
 	})
 
 	response.Write(message)
 }
 
 // Returns the currently stored state as a JSON blob
-func stateHandler(response http.ResponseWriter, req *http.Request) {
+func stateHandler(response http.ResponseWriter, req *http.Request, rcvr *receiver.Receiver) {
 	defer req.Body.Close()
 	response.Header().Set("Content-Type", "application/json")
 
-	if currentState == nil {
+	if rcvr.CurrentState == nil {
 		message, _ := json.Marshal(ApiErrors{[]string{"No currently stored state"}})
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write(message)
 		return
 	}
 
-	response.Write(currentState.Encode())
+	response.Write(rcvr.CurrentState.Encode())
 }
 
-// Receives POSTed state updates from a Sidecar instance
-func updateHandler(response http.ResponseWriter, req *http.Request) {
-	defer req.Body.Close()
-	response.Header().Set("Content-Type", "application/json")
-
-	data, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		message, _ := json.Marshal(ApiErrors{[]string{err.Error()}})
-		response.WriteHeader(http.StatusInternalServerError)
-		response.Write(message)
-		return
+func wrapHandler(handler func(http.ResponseWriter, *http.Request, *receiver.Receiver), rcvr *receiver.Receiver) http.HandlerFunc {
+	return func(response http.ResponseWriter, req *http.Request) {
+		handler(response, req, rcvr)
 	}
-
-	var evt catalog.StateChangedEvent
-	err = json.Unmarshal(data, &evt)
-	if err != nil {
-		message, _ := json.Marshal(ApiErrors{[]string{err.Error()}})
-		response.WriteHeader(http.StatusInternalServerError)
-		response.Write(message)
-		return
-	}
-
-	stateLock.Lock()
-	if currentState == nil || currentState.LastChanged.Before(evt.State.LastChanged) {
-		currentState = &evt.State
-		lastSvcChanged = &evt.ChangeEvent.Service
-		maybeNotify(evt.ChangeEvent.PreviousStatus, evt.ChangeEvent.Service.Status)
-	}
-	stateLock.Unlock()
 }
 
 // Start the HTTP server and begin handling requests. This is a
 // blocking call.
-func serveHttp(listenIp string, listenPort int) {
+func serveHttp(listenIp string, listenPort int, rcvr *receiver.Receiver) {
 	listenStr := fmt.Sprintf("%s:%d", listenIp, listenPort)
 
 	log.Infof("Starting up on %s", listenStr)
 	router := mux.NewRouter()
 
-	router.HandleFunc("/update", updateHandler).Methods("POST")
-	router.HandleFunc("/health", healthHandler).Methods("GET")
-	router.HandleFunc("/state", stateHandler).Methods("GET")
+	updateWrapped := wrapHandler(receiver.UpdateHandler, rcvr)
+	healthWrapped := wrapHandler(healthHandler, rcvr)
+	stateWrapped := wrapHandler(stateHandler, rcvr)
+
+	router.HandleFunc("/update", updateWrapped).Methods("POST")
+	router.HandleFunc("/health", healthWrapped).Methods("GET")
+	router.HandleFunc("/state", stateWrapped).Methods("GET")
 	http.Handle("/", handlers.LoggingHandler(os.Stdout, router))
 
 	err := http.ListenAndServe(listenStr, nil)
