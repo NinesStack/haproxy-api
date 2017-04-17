@@ -11,10 +11,12 @@ script:
   - go test -v ./... && (CGO_ENABLED=0 GOOS=linux go build -ldflags '-d')
   - if [ "$TRAVIS_BRANCH" == "master" ] && [ "${TRAVIS_GO_VERSION::3}" == "${PRODUCTION_GO_VERSION}" ]; then
       echo "Building container gonitro/haproxy-api:${TRAVIS_COMMIT::7}" &&
-      cp docker/haproxy.docker.toml docker/haproxy.toml &&
-      docker build -f docker/Dockerfile -t haproxy . &&
-      docker tag haproxy gonitro/haproxy:${TRAVIS_COMMIT::7} &&
-      docker tag haproxy gonitro/haproxy:latest;
+      cd docker &&
+      cp haproxy-api.docker.toml haproxy-api.toml &&
+      cp ../haproxy-api . && cp -pr ../templates . &&
+      docker build -f docker/Dockerfile -t haproxy-api . &&
+      docker tag haproxy-api gonitro/haproxy-api:${TRAVIS_COMMIT::7} &&
+      docker tag haproxy-api gonitro/haproxy-api:latest;
     fi
 
 after_success:
