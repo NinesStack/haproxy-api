@@ -35,10 +35,9 @@ func Test_onChange(t *testing.T) {
 
 		Convey("returns nil on error", func() {
 			err := errors.New("Oh no!")
-			err2 := watcher.onChange(nil, err)
+			watcher.onChange(nil, err)
 
 			So(len(notifyChan), ShouldEqual, 0)
-			So(err2, ShouldBeNil)
 		})
 
 		Convey("notifies the channel", func() {
