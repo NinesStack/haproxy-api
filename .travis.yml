@@ -1,0 +1,43 @@
+language: go
+go:
+  - 1.8.x
+
+sudo: required
+
+services:
+  - docker
+
+script:
+  - go test -v ./... && (CGO_ENABLED=0 GOOS=linux go build -ldflags '-d')
+  - if [ "$TRAVIS_BRANCH" == "master" ] && [ "${TRAVIS_GO_VERSION::3}" == "${PRODUCTION_GO_VERSION}" ]; then
+      echo "Building container gonitro/haproxy-api:${TRAVIS_COMMIT::7}" &&
+      cp docker/haproxy.docker.toml docker/haproxy.toml &&
+      docker build -f docker/Dockerfile -t haproxy . &&
+      docker tag haproxy gonitro/haproxy:${TRAVIS_COMMIT::7} &&
+      docker tag haproxy gonitro/haproxy:latest;
+    fi
+
+after_success:
+  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+  - echo "Building on Go version ${TRAVIS_GO_VERSION} for branch ${TRAVIS_BRANCH}"
+  - if [ "$TRAVIS_BRANCH" == "master" ] && [ "${TRAVIS_GO_VERSION::3}" == "${PRODUCTION_GO_VERSION}" ]; then
+      echo "Pushing container gonitro/haproxy-api:${TRAVIS_COMMIT::7}" &&
+      docker push gonitro/haproxy-api:${TRAVIS_COMMIT::7};
+    fi
+  - if [ "$TRAVIS_BRANCH" == "master" ] && [ "${TRAVIS_GO_VERSION::3}" == "${PRODUCTION_GO_VERSION}" ] && [ -z "${NO_PUSH_LATEST}" ]; then
+      docker push gonitro/haproxy-api:latest;
+    fi
+
+deploy:
+  provider: releases
+
+  api_key:
+
+    secure: ZxoQIiMB5ZINSB6qCTwXXWShnbjDnItIzvRdNssaxlbAcr9gaEabR1IGaI4RoqUjN8xiR3rzIDlVl84ddv2EQMi+Ct4QAfHb9sFRG2WmBzSUHgGpg6hbEfnfn9pYaur3S1qa2U5OOBaKULmr5Mwga0tPPbI72SWdaNc6p51uQXx7FCNKQeadBgzj7nJYqFuhXhj0pwsvCY6BmkIx+sHg+bq3b6mhlTqPyyNYpZcsCDnfvUU8mwZ725vAogAx50n+Yo/Et6F0yELc+opgbdZRZXBeDlY9wILpFO5QdCLWMEVPcit9pdtzcU7wfF/sg5TYA9xu6QxqObIUeMIukTtwXA/+uWtuUq9s1ZmVPTNBbytbvL3RWQZqykDO9eIXxrgiFON8rQZEm36ZdTAP0FlM8QjA+iIag5fMOA/RxGhnHnh7MlX7swqJNkotGBGOQljMNAABRtA/4rekEOUS4D8mKNRriZZ+n0jwBTHkUhU+qkhcPtN8WfxBWmILolPd0QdH6k5qqabuVPbexEVTO2V8ECfLf8KnP3c+SP1QOv+2tU2B0jXmAF8gaNKGxgyuhkgvQM+SSo74dCVhpPhT/DQMUEeaOBHHSgO/AQbAFCZuHtw6q0V4DVYAu/W0+7w6Xi889EMoypnFSZFVxQQwTgtG1uNkbOVT4aohbs9TmokDIOA=
+
+  file: haproxy-api
+
+  on:
+    repo: Nitro/haproxy-api
+    tags: true
+    condition: ${TRAVIS_GO_VERSION::3} == ${PRODUCTION_GO_VERSION}
