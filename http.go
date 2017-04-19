@@ -84,6 +84,7 @@ func stateHandler(response http.ResponseWriter, req *http.Request, rcvr *receive
 	response.Write(rcvr.CurrentState.Encode())
 }
 
+// Wrap a handler that needs a receiver into a standard http.HandlerFunc
 func wrapHandler(handler func(http.ResponseWriter, *http.Request, *receiver.Receiver), rcvr *receiver.Receiver) http.HandlerFunc {
 	return func(response http.ResponseWriter, req *http.Request) {
 		handler(response, req, rcvr)
