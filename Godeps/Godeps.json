@@ -14,28 +14,28 @@
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/catalog",
-			"Comment": "v1.1.3-4-g17afb89",
-			"Rev": "17afb899573750a883ca596997118f25cd3b87a9"
+			"Comment": "v1.2.0-5-g0b07d33",
+			"Rev": "0b07d33bce8569962e2f6ef5c531b12c7f1d310c"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/haproxy",
-			"Comment": "v1.1.3-4-g17afb89",
-			"Rev": "17afb899573750a883ca596997118f25cd3b87a9"
+			"Comment": "v1.2.0-5-g0b07d33",
+			"Rev": "0b07d33bce8569962e2f6ef5c531b12c7f1d310c"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/output",
-			"Comment": "v1.1.3-4-g17afb89",
-			"Rev": "17afb899573750a883ca596997118f25cd3b87a9"
+			"Comment": "v1.2.0-5-g0b07d33",
+			"Rev": "0b07d33bce8569962e2f6ef5c531b12c7f1d310c"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/receiver",
-			"Comment": "v1.1.3-4-g17afb89",
-			"Rev": "17afb899573750a883ca596997118f25cd3b87a9"
+			"Comment": "v1.2.0-5-g0b07d33",
+			"Rev": "0b07d33bce8569962e2f6ef5c531b12c7f1d310c"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/service",
-			"Comment": "v1.1.3-4-g17afb89",
-			"Rev": "17afb899573750a883ca596997118f25cd3b87a9"
+			"Comment": "v1.2.0-5-g0b07d33",
+			"Rev": "0b07d33bce8569962e2f6ef5c531b12c7f1d310c"
 		},
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
@@ -178,7 +178,8 @@
 		},
 		{
 			"ImportPath": "github.com/relistan/rubberneck",
-			"Rev": "d89ae22dd501ccdc07acd3ff91419d1e8d5cb83c"
+			"Comment": "v1.0.0-1-g949b352",
+			"Rev": "949b352ef2ef402e9e9b578c5e242cd04297ce3e"
 		},
 		{
 			"ImportPath": "github.com/smartystreets/assertions",

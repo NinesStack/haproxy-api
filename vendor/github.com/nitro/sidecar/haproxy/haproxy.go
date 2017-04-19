@@ -31,6 +31,7 @@ type HAproxy struct {
 	PidFile      string `toml:"pid_file"`
 	User         string `toml:"user"`
 	Group        string `toml:"group"`
+	UseHostnames bool   `toml:"use_hostnames"`
 	eventChannel chan catalog.ChangeEvent
 }
 
@@ -99,6 +100,33 @@ func findPortForService(svcPort string, svc *service.Service) string {
 	return "-1"
 }
 
+// Find the matching IP address when given a ServicePort
+func (h *HAproxy) findIpForService(svcPort string, svc *service.Service) string {
+	// We can turn off using IP addresses in the config, which is sometimes
+	// necessary (e.g. w/Docker for Mac).
+	if h.UseHostnames {
+		return svc.Hostname
+	}
+
+	matchPort, err := strconv.ParseInt(svcPort, 10, 64)
+	if err != nil {
+		log.Errorf("Invalid value from template ('%s') can't parse as int64: %s", svcPort, err.Error())
+		return "-1"
+	}
+
+	for _, port := range svc.Ports {
+		if port.ServicePort == matchPort {
+			return port.IP
+		}
+	}
+
+	// This defaults to the previous behavior of templating the hostname
+	// instead of the IP address. This relies on haproxy being able to
+	// resolve the hostname (which means non-FQDN hostnames are a hazard).
+	// Ideally this never happens for clusters that have IP addresses defined.
+	return svc.Hostname
+}
+
 // Create an HAproxy config from the supplied ServicesState. Write it out to the
 // supplied io.Writer interface. This gets a list from servicesWithPorts() and
 // builds a list of unique ports for all services, then passes these to the
@@ -130,6 +158,7 @@ func (h *HAproxy) WriteConfig(state *catalog.ServicesState, output io.Writer) er
 			return ports[k]
 		},
 		"portFor":      findPortForService,
+		"ipFor":        h.findIpForService,
 		"bindIP":       func() string { return h.BindIP },
 		"sanitizeName": sanitizeName,
 	}
@@ -154,15 +183,14 @@ func (h *HAproxy) WriteConfig(state *catalog.ServicesState, output io.Writer) er
 	return nil
 }
 
-// Execute a command and log the error, but bubble it up as well
+// Execute a command and bubble up the error
 func (h *HAproxy) run(command string) error {
-	cmd := exec.Command("/bin/bash", "-c", command)
-	err := cmd.Run()
+	out, err := exec.Command("/bin/bash", "-c", command).CombinedOutput()
 	if err != nil {
-		log.Errorf("Error running '%s': %s", command, err.Error())
+		return fmt.Errorf("Error running '%s': %s\n%s", command, err.Error(), out)
 	}
 
-	return err
+	return nil
 }
 
 // Run the HAproxy reload command to load the new config and restart.

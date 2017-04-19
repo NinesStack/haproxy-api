@@ -11,8 +11,14 @@ var (
 	expr *regexp.Regexp
 )
 
+// AddLineFeed will direct the Printer to add line feeds
+// at the end of each output. NoAddLineFeed will not. This
+// is useful for controlling the display of output when
+// functions exhibit different behavior. For example,
+// fmt.Printf wants line feeds added, whereas logrus.Infof
+// does not.
 const (
-	AddLineFeed = iota
+	AddLineFeed   = iota
 	NoAddLineFeed = iota
 )
 
@@ -22,17 +28,17 @@ func init() {
 
 // Conforms to the signature used by fmt.Printf and log.Printf among
 // many functions available in other packages.
-type printerFunc func(format string, v ...interface{})
+type PrinterFunc func(format string, v ...interface{})
 
 // Printer defines the signature of a function that can be
 // used to display the configuration. This signature is used
 // by fmt.Printf, log.Printf, various logging output levels
 // from the logrus package, and others.
 type Printer struct {
-	Show  printerFunc
+	Show PrinterFunc
 }
 
-func addLineFeed(fn printerFunc) printerFunc {
+func addLineFeed(fn PrinterFunc) PrinterFunc {
 	return func(format string, v ...interface{}) {
 		format = format + "\n"
 		fn(format, v...)
@@ -50,7 +56,7 @@ func NewDefaultPrinter() *Printer {
 
 // NewPrinter returns a Printer configured to use the supplied function
 // to output to the supplied function.
-func NewPrinter(fn printerFunc, lineFeed int) *Printer {
+func NewPrinter(fn PrinterFunc, lineFeed int) *Printer {
 	p := &Printer{Show: fn}
 
 	if lineFeed == AddLineFeed {
@@ -81,7 +87,7 @@ func (p *Printer) Print(objs ...interface{}) {
 // takes a label argument which is a string to be printed into the title bar in
 // the output.
 func (p *Printer) PrintWithLabel(label string, objs ...interface{}) {
-	p.Show("%s %s", label, strings.Repeat("-", 50 - len(label) - 1))
+	p.Show("%s %s", label, strings.Repeat("-", 50-len(label)-1))
 	for _, obj := range objs {
 		p.processOne(reflect.ValueOf(obj), 0)
 	}

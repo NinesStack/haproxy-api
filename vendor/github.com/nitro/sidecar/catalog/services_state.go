@@ -562,6 +562,9 @@ func (state *ServicesState) TombstoneServices(hostname string, containerList []s
 }
 
 func (state *ServicesState) EachServer(fn func(hostname *string, server *Server)) {
+	if state == nil {
+		return
+	}
 	for hostname, server := range state.Servers {
 		fn(&hostname, server)
 	}
@@ -594,7 +597,7 @@ func (state *ServicesState) ByService() map[string][]*service.Service {
 	return serviceMap
 }
 
-func DecodeStream(input io.Reader, callback func(map[string][]*service.Service, error) error) error {
+func DecodeStream(input io.Reader, callback func(map[string][]*service.Service, error)) error {
 	dec := json.NewDecoder(input)
 	for dec.More() {
 		var conf map[string][]*service.Service

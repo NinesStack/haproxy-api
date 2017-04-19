@@ -54,12 +54,12 @@ func NewSidecarWatcher(url string, looper director.Looper, notifyChan chan struc
 // onChange is a callback triggered by changed from the Sidecar /watch
 // endpoint. We don't need the data it sends, but the callback function
 // is required to be of this signature.
-func (w *SidecarWatcher) onChange(state map[string][]*service.Service, err error) error {
+func (w *SidecarWatcher) onChange(state map[string][]*service.Service, err error) {
 	// If something went wrong, we bail, don't reload HAproxy,
 	// and let the connection time out
 	if err != nil {
 		log.Errorf("Got error from stream parser: %s", err.Error())
-		return nil
+		return
 	}
 
 	w.notify()
@@ -69,8 +69,6 @@ func (w *SidecarWatcher) onChange(state map[string][]*service.Service, err error
 		<-w.timer.C
 	}
 	w.resetTimer()
-
-	return nil
 }
 
 // Utility method to rest the timer
