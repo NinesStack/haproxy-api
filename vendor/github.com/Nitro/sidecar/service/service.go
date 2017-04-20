@@ -1,4 +1,5 @@
 package service
+//go:generate ffjson $GOFILE
 
 import (
 	"fmt"
@@ -38,7 +39,7 @@ type Service struct {
 	Status    int
 }
 
-func (svc Service) Encode() ([]byte, error) {
+func (svc *Service) Encode() ([]byte, error) {
 	return svc.MarshalJSON()
 }
 

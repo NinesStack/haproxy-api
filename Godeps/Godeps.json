@@ -14,28 +14,28 @@
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/catalog",
-			"Comment": "v1.2.0-6-gbea4de7",
-			"Rev": "bea4de792ae037c1b14f9aa16c15e23161f161d2"
+			"Comment": "v1.2.0-9-gb015a24",
+			"Rev": "b015a2483c8d703a0a509ea0298acf7b3dbb4e94"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/haproxy",
-			"Comment": "v1.2.0-6-gbea4de7",
-			"Rev": "bea4de792ae037c1b14f9aa16c15e23161f161d2"
+			"Comment": "v1.2.0-9-gb015a24",
+			"Rev": "b015a2483c8d703a0a509ea0298acf7b3dbb4e94"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/output",
-			"Comment": "v1.2.0-6-gbea4de7",
-			"Rev": "bea4de792ae037c1b14f9aa16c15e23161f161d2"
+			"Comment": "v1.2.0-9-gb015a24",
+			"Rev": "b015a2483c8d703a0a509ea0298acf7b3dbb4e94"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/receiver",
-			"Comment": "v1.2.0-6-gbea4de7",
-			"Rev": "bea4de792ae037c1b14f9aa16c15e23161f161d2"
+			"Comment": "v1.2.0-9-gb015a24",
+			"Rev": "b015a2483c8d703a0a509ea0298acf7b3dbb4e94"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/service",
-			"Comment": "v1.2.0-6-gbea4de7",
-			"Rev": "bea4de792ae037c1b14f9aa16c15e23161f161d2"
+			"Comment": "v1.2.0-9-gb015a24",
+			"Rev": "b015a2483c8d703a0a509ea0298acf7b3dbb4e94"
 		},
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
