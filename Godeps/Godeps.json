@@ -14,28 +14,28 @@
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/catalog",
-			"Comment": "v1.2.0-5-g0b07d33",
-			"Rev": "0b07d33bce8569962e2f6ef5c531b12c7f1d310c"
+			"Comment": "v1.2.0-6-gbea4de7",
+			"Rev": "bea4de792ae037c1b14f9aa16c15e23161f161d2"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/haproxy",
-			"Comment": "v1.2.0-5-g0b07d33",
-			"Rev": "0b07d33bce8569962e2f6ef5c531b12c7f1d310c"
+			"Comment": "v1.2.0-6-gbea4de7",
+			"Rev": "bea4de792ae037c1b14f9aa16c15e23161f161d2"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/output",
-			"Comment": "v1.2.0-5-g0b07d33",
-			"Rev": "0b07d33bce8569962e2f6ef5c531b12c7f1d310c"
+			"Comment": "v1.2.0-6-gbea4de7",
+			"Rev": "bea4de792ae037c1b14f9aa16c15e23161f161d2"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/receiver",
-			"Comment": "v1.2.0-5-g0b07d33",
-			"Rev": "0b07d33bce8569962e2f6ef5c531b12c7f1d310c"
+			"Comment": "v1.2.0-6-gbea4de7",
+			"Rev": "bea4de792ae037c1b14f9aa16c15e23161f161d2"
 		},
 		{
 			"ImportPath": "github.com/Nitro/sidecar/service",
-			"Comment": "v1.2.0-5-g0b07d33",
-			"Rev": "0b07d33bce8569962e2f6ef5c531b12c7f1d310c"
+			"Comment": "v1.2.0-6-gbea4de7",
+			"Rev": "bea4de792ae037c1b14f9aa16c15e23161f161d2"
 		},
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
@@ -123,6 +123,10 @@
 			"Rev": "7cbfc4525fb2aeeeff56dc5c6fe18a5536a51f6b"
 		},
 		{
+			"ImportPath": "github.com/gopherjs/gopherjs/js",
+			"Rev": "3496c6f94e1b945f3fc9580f6982675c0a74cd6c"
+		},
+		{
 			"ImportPath": "github.com/gorilla/handlers",
 			"Comment": "v1.2-4-g13d7309",
 			"Rev": "13d73096a474cac93275c679c7b8a2dc17ddba82"
@@ -190,6 +194,11 @@
 		},
 		{
 			"ImportPath": "github.com/smartystreets/assertions",
+			"Comment": "1.6.0-14-g26acb92",
+			"Rev": "26acb9229f421449ac63d014995b282d59261a8b"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/assertions/internal/go-render/render",
 			"Comment": "1.6.0-14-g26acb92",
 			"Rev": "26acb9229f421449ac63d014995b282d59261a8b"
 		},
