@@ -56,6 +56,11 @@ func run(command string) error {
 func writeAndReload(state *catalog.ServicesState) {
 	log.Info("Updating HAproxy")
 	err := proxy.WriteAndReload(state)
+	if err != nil {
+		log.Errorf("Failed updating HAproxy: %s", err)
+	} else {
+		log.Info("Success updating HAproxy")
+	}
 	updateSuccess = (err == nil)
 }
 
