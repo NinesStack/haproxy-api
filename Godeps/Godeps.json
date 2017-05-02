@@ -123,10 +123,6 @@
 			"Rev": "7cbfc4525fb2aeeeff56dc5c6fe18a5536a51f6b"
 		},
 		{
-			"ImportPath": "github.com/gopherjs/gopherjs/js",
-			"Rev": "3496c6f94e1b945f3fc9580f6982675c0a74cd6c"
-		},
-		{
 			"ImportPath": "github.com/gorilla/handlers",
 			"Comment": "v1.2-4-g13d7309",
 			"Rev": "13d73096a474cac93275c679c7b8a2dc17ddba82"
@@ -176,6 +172,14 @@
 			"Rev": "89c3c97a8482f3a57cd4bb683df1a7b2c61405d8"
 		},
 		{
+			"ImportPath": "github.com/pquerna/ffjson/fflib/v1",
+			"Rev": "f60b597ded7e7542b36fe20999dfd48166abd5ae"
+		},
+		{
+			"ImportPath": "github.com/pquerna/ffjson/fflib/v1/internal",
+			"Rev": "f60b597ded7e7542b36fe20999dfd48166abd5ae"
+		},
+		{
 			"ImportPath": "github.com/relistan/go-director",
 			"Rev": "9273dae8c839a114aa4472165f84e057d5b12e09"
 		},
@@ -186,11 +190,6 @@
 		},
 		{
 			"ImportPath": "github.com/smartystreets/assertions",
-			"Comment": "1.6.0-14-g26acb92",
-			"Rev": "26acb9229f421449ac63d014995b282d59261a8b"
-		},
-		{
-			"ImportPath": "github.com/smartystreets/assertions/internal/go-render/render",
 			"Comment": "1.6.0-14-g26acb92",
 			"Rev": "26acb9229f421449ac63d014995b282d59261a8b"
 		},
