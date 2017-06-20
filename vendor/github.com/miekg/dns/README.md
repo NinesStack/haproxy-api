@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/miekg/dns.svg?branch=master)](https://travis-ci.org/miekg/dns)
-[![](https://godoc.org/github.com/miekg/dns?status.svg)](https://godoc.org/github.com/miekg/dns)
 
 # Alternative (more granular) approach to a DNS library
 
@@ -13,7 +12,7 @@ can build servers and resolvers with it.
 
 We try to keep the "master" branch as sane as possible and at the bleeding edge
 of standards, avoiding breaking changes wherever reasonable. We support the last
-two versions of Go, currently: 1.6 and 1.7.
+two versions of Go, currently: 1.5 and 1.6.
 
 # Goals
 
@@ -51,9 +50,6 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://dnslookup.org
 * https://github.com/looterz/grimd
 * https://github.com/phamhongviet/serf-dns
-* https://github.com/mehrdadrad/mylg
-* https://github.com/bamarni/dockness
-* https://github.com/fffaraz/microdns
 
 Send pull request if you want to be listed here.
 
