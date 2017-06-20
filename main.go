@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"os/exec"
-	"time"
 
 	"github.com/Nitro/sidecar/catalog"
 	"github.com/Nitro/sidecar/haproxy"
@@ -15,7 +14,7 @@ import (
 )
 
 const (
-	RELOAD_BUFFER = 256
+	ReloadBufferSize = 256
 )
 
 var (
@@ -77,12 +76,7 @@ func main() {
 
 	proxy = config.HAproxy
 
-	reloadChan := make(chan time.Time, RELOAD_BUFFER)
-	rcvr := &receiver.Receiver{
-		ReloadChan: reloadChan,
-		OnUpdate:   writeAndReload,
-	}
-
+	rcvr := receiver.NewReceiver(ReloadBufferSize, writeAndReload)
 	watchUrl, stateUrl := generateUrls(opts, config)
 
 	// If we're in follow mode, do that

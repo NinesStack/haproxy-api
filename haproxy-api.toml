@@ -6,8 +6,8 @@ logging_level = "info" # or "debug", or "error", etc
 [haproxy]
 bind_ip     = "192.168.168.168"       # Bind IP for HAproxy itself
 template    = "templates/haproxy.cfg" # Template to use for HAproxy
-config_file = "/etc/haproxy.cfg"      # Where to write the config
-pid_file    = "/var/run/haproxy.pid"  # Where to write the HAproxy pid file
+config_file = "/tmp/haproxy.cfg"      # Where to write the config
+pid_file    = "/tmp/haproxy.pid"  # Where to write the HAproxy pid file
 
 [sidecar]
 state_url = "http://localhost:7777/state.json" # Where to fetch our initial state
