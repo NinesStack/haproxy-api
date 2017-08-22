@@ -14,7 +14,7 @@ script:
       cd docker &&
       cp haproxy-api.docker.toml haproxy-api.toml &&
       cp ../haproxy-api . && cp -pr ../templates . &&
-      docker build -f docker/Dockerfile -t haproxy-api . &&
+      docker build -f Dockerfile -t haproxy-api . &&
       docker tag haproxy-api gonitro/haproxy-api:${TRAVIS_COMMIT::7} &&
       docker tag haproxy-api gonitro/haproxy-api:latest;
     fi
