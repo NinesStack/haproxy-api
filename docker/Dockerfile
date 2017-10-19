@@ -1,4 +1,4 @@
-FROM gliderlabs/alpine:3.4
+FROM library/alpine:3.6
 
 # Necessary depedencies
 RUN apk --update add haproxy bash curl tar
