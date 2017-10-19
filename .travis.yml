@@ -7,6 +7,9 @@ sudo: required
 services:
   - docker
 
+install:
+  - go get github.com/golang/dep/cmd/dep && dep ensure
+
 script:
   - go test -v ./... && (CGO_ENABLED=0 GOOS=linux go build -ldflags '-d')
   - if [ "$TRAVIS_BRANCH" == "master" ] && [ "${TRAVIS_GO_VERSION::3}" == "${PRODUCTION_GO_VERSION}" ]; then
