@@ -49,7 +49,7 @@ func parseConfig(path string) *Config {
 	if proxy.ReloadCmd == "" {
 		proxy.ReloadCmd = "haproxy -f " + proxy.ConfigFile + " -p " +
 			proxy.PidFile + " `[[ -f " +
-			proxy.PidFile + " ]] && echo \"-sf $(cat " + proxy.PidFile + ")\"]]`"
+			proxy.PidFile + " ]] && echo \"-sf $(cat " + proxy.PidFile + ")\"`"
 	}
 
 	if proxy.VerifyCmd == "" {
