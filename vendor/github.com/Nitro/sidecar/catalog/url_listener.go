@@ -10,23 +10,29 @@ import (
 	"os"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/relistan/go-director"
 )
 
 const (
-	CLIENT_TIMEOUT  = 3 * time.Second
-	DEFAULT_RETRIES = 5
+	ClientTimeout  = 3 * time.Second
+	DefaultRetries = 5
 )
 
+// An UrlListener is an event listener that receives updates over an
+// HTTP POST to an endpoint.
 type UrlListener struct {
 	Url          string
 	Retries      int
 	Client       *http.Client
 	looper       director.Looper
 	eventChannel chan ChangeEvent
+	managed      bool // Is this to be auto-managed by ServicesState?
+	name         string
 }
 
+// A StateChangedEvent is sent to UrlListeners when a significant
+// event has changed the ServicesState.
 type StateChangedEvent struct {
 	State       ServicesState
 	ChangeEvent ChangeEvent
@@ -54,7 +60,7 @@ func prepareCookieJar(listenurl string) *cookiejar.Jar {
 	return cookieJar
 }
 
-func NewUrlListener(listenurl string) *UrlListener {
+func NewUrlListener(listenurl string, managed bool) *UrlListener {
 	errorChan := make(chan error, 1)
 
 	// Primarily for the purpose of load balancers that look
@@ -64,9 +70,11 @@ func NewUrlListener(listenurl string) *UrlListener {
 	return &UrlListener{
 		Url:          listenurl,
 		looper:       director.NewFreeLooper(director.FOREVER, errorChan),
-		Client:       &http.Client{Timeout: CLIENT_TIMEOUT, Jar: cookieJar},
+		Client:       &http.Client{Timeout: ClientTimeout, Jar: cookieJar},
 		eventChannel: make(chan ChangeEvent, 20),
-		Retries:      DEFAULT_RETRIES,
+		Retries:      DefaultRetries,
+		managed:      managed,
+		name:         "UrlListener(" + listenurl + ")",
 	}
 }
 
@@ -86,11 +94,23 @@ func withRetries(count int, fn func() error) error {
 }
 
 func (u *UrlListener) Name() string {
-	return "UrlListener(" + u.Url + ")"
+	return u.name
+}
+
+func (u *UrlListener) SetName(name string) {
+	u.name = name
 }
 
 func (u *UrlListener) Chan() chan ChangeEvent {
 	return u.eventChannel
+}
+
+func (u *UrlListener) Managed() bool {
+	return u.managed
+}
+
+func (u *UrlListener) Stop() {
+	u.looper.Quit()
 }
 
 func (u *UrlListener) Watch(state *ServicesState) {
@@ -132,7 +152,7 @@ func (u *UrlListener) Watch(state *ServicesState) {
 			})
 
 			if err != nil {
-				log.Warnf("Failed posting state to '%s': %s", u.Url, err.Error())
+				log.Warnf("Failed posting state to '%s' %s: %s", u.Url, u.Name(), err.Error())
 			}
 
 			return nil

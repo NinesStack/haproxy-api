@@ -13,9 +13,9 @@ import (
 	"github.com/Nitro/memberlist"
 	"github.com/Nitro/sidecar/output"
 	"github.com/Nitro/sidecar/service"
-	log "github.com/Sirupsen/logrus"
 	"github.com/armon/go-metrics"
 	"github.com/relistan/go-director"
+	log "github.com/sirupsen/logrus"
 )
 
 // catalog handles all of the eventual-consistency mechanisms for
@@ -52,14 +52,15 @@ type Server struct {
 
 // Returns a pointer to a properly configured Server
 func NewServer(name string) *Server {
-	var server Server
-	server.Name = name
-	// Pre-create for 5 services per host
-	server.Services = make(map[string]*service.Service, 5)
-	server.LastUpdated = time.Unix(0, 0)
-	server.LastChanged = time.Unix(0, 0)
+	server := &Server{
+		Name: name,
+		// Pre-create for 5 services per host
+		Services:    make(map[string]*service.Service, 5),
+		LastUpdated: time.Unix(0, 0),
+		LastChanged: time.Unix(0, 0),
+	}
 
-	return &server
+	return server
 }
 
 // Holds the state about all the servers in the cluster
@@ -70,31 +71,35 @@ type ServicesState struct {
 	Hostname            string
 	Broadcasts          chan [][]byte        `json:"-"`
 	ServiceMsgs         chan service.Service `json:"-"`
-	listeners           []Listener
+	listeners           map[string]Listener
 	tombstoneRetransmit time.Duration
 	sync.RWMutex
 }
 
+// A Listener receives update events from state changes.
 type Listener interface {
-	Chan() chan ChangeEvent
-	Name() string
+	Chan() chan ChangeEvent // The event channel
+	Name() string           // The name of this listener
+	Managed() bool          // Is this managed by us? (e.g. auto-added/removed)
 }
 
 // Returns a pointer to a properly configured ServicesState
 func NewServicesState() *ServicesState {
-	var state ServicesState
 	var err error
-	state.Servers = make(map[string]*Server, 5)
-	state.Broadcasts = make(chan [][]byte)
-	state.LastChanged = time.Unix(0, 0)
+	state := &ServicesState{
+		Servers:             make(map[string]*Server, 5),
+		Broadcasts:          make(chan [][]byte),
+		LastChanged:         time.Unix(0, 0),
+		tombstoneRetransmit: TOMBSTONE_RETRANSMIT,
+		ServiceMsgs:         make(chan service.Service, 25),
+		listeners:           make(map[string]Listener),
+	}
 	state.Hostname, err = os.Hostname()
 	if err != nil {
 		log.Errorf("Error getting hostname! %s", err.Error())
 	}
-	state.tombstoneRetransmit = TOMBSTONE_RETRANSMIT
-	state.ServiceMsgs = make(chan service.Service, 25)
 
-	return &state
+	return state
 }
 
 // Shortcut for checking if the server has this service or not.
@@ -133,22 +138,6 @@ func (state *ServicesState) HasServer(hostname string) bool {
 	return ok
 }
 
-// Looks up a service from *only this host* by ID
-func (state *ServicesState) GetLocalService(id string) *service.Service {
-	if !state.HasServer(state.Hostname) {
-		// This can happen a lot on startup, so we're not logging it
-		return nil
-	}
-
-	if state.Servers != nil &&
-		state.Servers[state.Hostname] != nil &&
-		state.Servers[state.Hostname].Services != nil {
-		return state.Servers[state.Hostname].Services[id]
-	}
-
-	return nil
-}
-
 // A server has left the cluster, so tombstone all of its records
 func (state *ServicesState) ExpireServer(hostname string) {
 	if !state.HasServer(hostname) || len(state.Servers[hostname].Services) == 0 {
@@ -171,7 +160,7 @@ func (state *ServicesState) ExpireServer(hostname string) {
 
 	log.Infof("Expiring %s", hostname)
 
-	tombstones := make([]service.Service, 0, len(state.Servers[hostname].Services))
+	var tombstones []service.Service
 
 	for _, svc := range state.Servers[hostname].Services {
 		previousStatus := svc.Status
@@ -243,10 +232,19 @@ func (state *ServicesState) NotifyListeners(svc *service.Service, previousStatus
 // major state change events. Channels must be buffered by at least 1
 // or they will block. Channels must be ready to receive input.
 func (state *ServicesState) AddListener(listener Listener) {
+	if listener.Chan() == nil {
+		log.Errorf("Refusing to add listener %s with nil channel!", listener.Name())
+		return
+	}
+
+	if cap(listener.Chan()) < 1 {
+		log.Errorf("Refusing to add blocking channel as listener: %s", listener.Name())
+		return
+	}
 	state.Lock()
 	defer state.Unlock()
 
-	state.listeners = append(state.listeners, listener)
+	state.listeners[listener.Name()] = listener
 	log.Debugf("AddListener(): added %s, new count %d", listener.Name(), len(state.listeners))
 }
 
@@ -256,21 +254,22 @@ func (state *ServicesState) RemoveListener(name string) error {
 	state.Lock()
 	defer state.Unlock()
 
-	for i := 0; i < len(state.listeners); i++ {
-		if state.listeners[i].Name() == name {
-			state.listeners = append(state.listeners[:i], state.listeners[i+1:]...)
-			log.Debugf("RemoveListener(): removed %s, new count %d", name, len(state.listeners))
-			return nil
-		}
+	if _, ok := state.listeners[name]; ok {
+		delete(state.listeners, name)
+		log.Debugf("RemoveListener(): removed %s, new count %d", name, len(state.listeners))
+		return nil
 	}
 
 	return fmt.Errorf("No listener found with the name: %s", name)
 }
 
+// GetListeners returns a slice containing all the current listeners
 func (state *ServicesState) GetListeners() []Listener {
 	state.RLock()
 	var listeners []Listener
-	listeners = append(listeners, state.listeners...)
+	for _, listener := range state.listeners {
+		listeners = append(listeners, listener)
+	}
 	state.RUnlock()
 
 	return listeners
@@ -393,6 +392,56 @@ func (state *ServicesState) TrackNewServices(fn func() []service.Service, looper
 		}
 		return nil
 	})
+}
+
+// TrackLocalListeners runs in the background and repeatedly calls
+// a discovery function to return a list of event listeners. These will
+// then be added to to the listener list. Managed listeners no longer
+// reported from discovery will be removed.
+func (state *ServicesState) TrackLocalListeners(fn func() []Listener, looper director.Looper) {
+	looper.Loop(func() error {
+		discovered := fn()
+		// Add new listeners
+		for _, listener := range discovered {
+			state.RLock()
+			_, ok := state.listeners[listener.Name()]
+			state.RUnlock()
+
+			if !ok {
+				log.Infof("Adding listener %s because it was just discovered", listener.Name())
+				urlListener, ok := listener.(*UrlListener)
+				if ok {
+					urlListener.Watch(state)
+				} else {
+					state.AddListener(listener)
+				}
+			}
+		}
+		// Remove old ones
+		listeners := state.listeners
+		for _, listener := range listeners {
+			if listener.Managed() && !containsListener(discovered, listener.Name()) {
+				log.Infof("Removing listener %s because the service appears to be gone", listener.Name())
+				urlListener, ok := listener.(*UrlListener)
+				if ok {
+					log.Infof("Stopping UrlListener %s", listener.Name())
+					urlListener.Stop()
+				}
+				state.RemoveListener(listener.Name())
+			}
+		}
+
+		return nil
+	})
+}
+
+func containsListener(listeners []Listener, name string) bool {
+	for _, listener := range listeners {
+		if name == listener.Name() {
+			return true
+		}
+	}
+	return false
 }
 
 // Do we know about this service already? If we do, is it a tombstone?
@@ -525,7 +574,7 @@ func (state *ServicesState) BroadcastTombstones(fn func() []service.Service, loo
 func (state *ServicesState) TombstoneOthersServices() []service.Service {
 	defer metrics.MeasureSince([]string{"services_state", "TombstoneOthersServices"}, time.Now())
 
-	result := make([]service.Service, 0, 1)
+	var result []service.Service
 
 	// Manage tombstone life so we don't keep them forever. We have to do this
 	// even for hosts that aren't running services now, because they might have
@@ -576,7 +625,7 @@ func (state *ServicesState) TombstoneServices(hostname string, containerList []s
 	// Build a map from the list first
 	mapping := makeServiceMapping(containerList)
 
-	result := make([]service.Service, 0, len(containerList))
+	var result []service.Service
 
 	// Copy this so we can change the real list in the loop
 	services := state.Servers[hostname].Services
@@ -625,9 +674,6 @@ func (state *ServicesState) ByService() map[string][]*service.Service {
 
 	state.EachServiceSorted(
 		func(hostname *string, serviceId *string, svc *service.Service) {
-			if _, ok := serviceMap[svc.Name]; !ok {
-				serviceMap[svc.Name] = make([]*service.Service, 0, 3)
-			}
 			serviceMap[svc.Name] = append(serviceMap[svc.Name], svc)
 		},
 	)

@@ -6,8 +6,8 @@ import (
 
 	"github.com/Nitro/sidecar/catalog"
 	"github.com/Nitro/sidecar/service"
-	log "github.com/Sirupsen/logrus"
 	"github.com/relistan/go-director"
+	log "github.com/sirupsen/logrus"
 )
 
 // A SidecarWatcher attaches to the /watch endpoint on a Sidecar instance and
@@ -38,12 +38,12 @@ func NewSidecarWatcher(url string, looper director.Looper, notifyChan chan struc
 
 	w := &SidecarWatcher{
 		RefreshConn: CONNECTION_REFRESH_TIME,
-		Client:     &http.Client{Timeout: 0, Transport: tr},
-		looper:     looper,
-		transport:  tr,
-		notifyChan: notifyChan,
-		timer:      time.NewTimer(CONNECTION_REFRESH_TIME),
-		url:        url,
+		Client:      &http.Client{Timeout: 0, Transport: tr},
+		looper:      looper,
+		transport:   tr,
+		notifyChan:  notifyChan,
+		timer:       time.NewTimer(CONNECTION_REFRESH_TIME),
+		url:         url,
 	}
 
 	log.Infof("Using Sidecar connection refresh interval: %s", w.RefreshConn.String())

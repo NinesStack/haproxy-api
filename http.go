@@ -9,9 +9,9 @@ import (
 
 	"github.com/Nitro/sidecar/receiver"
 	"github.com/Nitro/sidecar/service"
-	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 type ApiErrors struct {

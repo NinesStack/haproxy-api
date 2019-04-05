@@ -5,8 +5,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/Nitro/sidecar/haproxy"
-	log "github.com/Sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
+	log "github.com/sirupsen/logrus"
 )
 
 type Config struct {
