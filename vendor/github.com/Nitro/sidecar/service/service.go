@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Nitro/sidecar/output"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -91,6 +91,12 @@ func (svc *Service) PortForServicePort(findPort int64, pType string) int64 {
 
 	log.Warnf("Unable to find ServicePort %d for service %s", findPort, svc.ID)
 	return -1
+}
+
+// ListenerName returns the string name this service should be identified
+// by as a listener to Sidecar state
+func (svc *Service) ListenerName() string {
+	return "Service(" + svc.Name + "-" + svc.ID + ")"
 }
 
 func Decode(data []byte) *Service {

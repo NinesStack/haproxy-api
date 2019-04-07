@@ -18,7 +18,7 @@ import (
 
 	"github.com/Nitro/sidecar/catalog"
 	"github.com/Nitro/sidecar/service"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type portset map[string]string
@@ -314,6 +314,12 @@ func (h *HAproxy) WriteAndReload(state *catalog.ServicesState) error {
 // Name is part of the catalog.Listener interface. Returns the listener name.
 func (h *HAproxy) Name() string {
 	return "HAproxy"
+}
+
+// Managed is part of the catalog.Listener interface. It tells the ServicesState if
+// this listener should be auto-added or removed. We never want that for haproxy.
+func (h *HAproxy) Managed() bool {
+	return false
 }
 
 // Chan is part of the catalog.Listener interface. Returns the channel we listen on.

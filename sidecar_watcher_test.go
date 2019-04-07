@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/relistan/go-director"
+	log "github.com/sirupsen/logrus"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

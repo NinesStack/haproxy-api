@@ -9,8 +9,8 @@ import (
 
 	"github.com/Nitro/sidecar/receiver"
 	"github.com/mitchellh/go-ps"
-	log "github.com/Sirupsen/logrus"
 	"github.com/relistan/go-director"
+	log "github.com/sirupsen/logrus"
 )
 
 // Loops in the background, waiting to be notified that something

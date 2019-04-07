@@ -7,9 +7,9 @@ import (
 	"github.com/Nitro/sidecar/catalog"
 	"github.com/Nitro/sidecar/haproxy"
 	"github.com/Nitro/sidecar/receiver"
-	log "github.com/Sirupsen/logrus"
 	"github.com/relistan/go-director"
 	"github.com/relistan/rubberneck"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

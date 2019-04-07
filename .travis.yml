@@ -1,14 +1,18 @@
 language: go
 go:
-  - 1.8.x
+  - 1.12.x
 
 sudo: required
 
 services:
   - docker
 
-install:
-  - go get github.com/golang/dep/cmd/dep && dep ensure
+env:
+  - GO111MODULE=on GOFLAGS=-mod=vendor
+
+# Prevent Travis from running the `travis_install_go_dependencies`
+# script, so we use only the dependencies from the `vendor` folder.
+install: true
 
 script:
   - go test -v ./... && (CGO_ENABLED=0 GOOS=linux go build -ldflags '-d')
