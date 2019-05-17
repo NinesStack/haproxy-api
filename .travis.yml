@@ -50,4 +50,4 @@ deploy:
   on:
     repo: Nitro/haproxy-api
     tags: true
-    condition: "${TRAVIS_GO_VERSION}" == "${PRODUCTION_GO_VERSION}"*
+    condition: ${TRAVIS_GO_VERSION} == ${PRODUCTION_GO_VERSION}*
