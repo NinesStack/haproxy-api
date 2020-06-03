@@ -54,7 +54,7 @@ func generateUrls(opts *CliOpts, config *Config) (watchUrl string, stateUrl stri
 		if err != nil {
 			log.Fatalf("Unable to follow %s: %s", *opts.Follow, err)
 		}
-		stateTmp.Path = "/state.json"
+		stateTmp.Path = "/api/state.json"
 		stateUrl = stateTmp.String()
 
 		watchTmp, err := url.Parse("http://" + *opts.Follow)
