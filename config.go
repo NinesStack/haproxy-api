@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/Nitro/sidecar/haproxy"
+	"github.com/Nitro/haproxy-api/haproxy"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 )

@@ -5,7 +5,7 @@ import (
 	"os/exec"
 
 	"github.com/Nitro/sidecar/catalog"
-	"github.com/Nitro/sidecar/haproxy"
+	"github.com/Nitro/haproxy-api/haproxy"
 	"github.com/Nitro/sidecar/receiver"
 	"github.com/relistan/go-director"
 	"github.com/relistan/rubberneck"
